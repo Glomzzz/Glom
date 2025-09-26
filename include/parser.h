@@ -7,7 +7,8 @@
 
 #include "expr.h"
 
-vector<unique_ptr<Expr>> parse(const string& input);
+vector<shared_ptr<Expr>> parse(string&& input);
+vector<shared_ptr<Expr>> parse(const string& input);
 
 
 #endif //GLOM_PARSER_H

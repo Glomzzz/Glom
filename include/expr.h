@@ -4,9 +4,9 @@
 
 #ifndef GLOM_EXPR_H
 #define GLOM_EXPR_H
-#ifndef EXPR_H
-#define EXPR_H
 
+#include <context.h>
+#include <functional>
 #include <vector>
 #include <string>
 #include <memory>
@@ -15,6 +15,7 @@
 using std::string;
 using std::vector;
 using std::unique_ptr;
+using std::shared_ptr;
 
 enum ExprType
 {
@@ -22,8 +23,13 @@ enum ExprType
     STRING,
     BOOLEAN,
     SYMBOL,
-    LIST
+    LIST,
+    LAMBDA,
+    PRIMITIVE
 };
+
+class Lambda;
+class Primitive;
 
 /**
  * Expr class hierarchy representing different types of expressions.
@@ -32,50 +38,83 @@ enum ExprType
  * - Boolean: Represents a boolean value.
  * - Symbol: Represents an identifier (i.e. variable name).
  * - List: Represents a list of expressions.
+ * - Lambda: Represents a lambda function.
+ * - Primitive: Represents a primitive members.
  */
-struct Expr {
+class Expr {
     ExprType type;
     std::variant<
         double,
         string,
         bool,
-        vector<unique_ptr<Expr>>
+        vector<shared_ptr<Expr>>,
+        shared_ptr<Lambda>,
+        shared_ptr<Primitive>
     > value;
-
+private:
     explicit Expr(double v);
     explicit Expr(bool v);
-    explicit Expr(vector<unique_ptr<Expr>>& v);
-    Expr(ExprType type, string v);
+    explicit Expr(vector<shared_ptr<Expr>>&& v);
+    explicit Expr(shared_ptr<Lambda>&& v);
+    explicit Expr(shared_ptr<Primitive>&& v);
+    Expr(ExprType type, string&& v);
+public:
+    [[nodiscard]] ExprType getType() const;
+    [[nodiscard]] double asNumber() const;
+    [[nodiscard]] const string& asString() const;
+    [[nodiscard]] bool asBoolean() const;
+    [[nodiscard]] const vector<shared_ptr<Expr>>& asList() const;
+    [[nodiscard]] shared_ptr<Lambda> asLambda() const;
+    [[nodiscard]] shared_ptr<Primitive> asPrimitive() const;
+    [[nodiscard]] string toString() const;
 
-    [[nodiscard]] string toString() const
-    {
-        switch (type)
-        {
-            case NUMBER:
-                return std::to_string(std::get<double>(value));
-            case STRING:
-                return "\"" + std::get<string>(value) + "\"";
-            case BOOLEAN:
-                return std::get<bool>(value) ? "true" : "false";
-            case SYMBOL:
-                return std::get<string>(value);
-            case LIST: {
-                const auto& list = std::get<vector<unique_ptr<Expr>>>(value);
-                string result = "(";
-                for (size_t i = 0; i < list.size(); ++i)
-                {
-                    result += list[i]->toString();
-                    if (i < list.size() - 1)
-                        result += " ";
-                }
-                result += ")";
-                return result;
-            }
-            default:
-                return "Unknown";
-        }
-    }
+    static Expr makeNumber(double v);
+    static Expr makeString(string v);
+    static Expr makeBoolean(bool v);
+    static Expr makeSymbol(string v);
+    static Expr makeList(vector<shared_ptr<Expr>> v);
+    static Expr makeLambda(shared_ptr<Lambda> v);
+    static Expr makePrimitive(shared_ptr<Primitive> v);
 };
 
-#endif
+
+
+class Param
+{
+    string name;
+    bool vararg = false;
+public:
+    explicit Param(string name, bool vararg = false);
+    [[nodiscard]] const string& getName() const;
+    [[nodiscard]] bool isVararg() const;
+    [[nodiscard]] string toString() const;
+};
+
+class Lambda
+{
+    vector<Param> params;
+    vector<shared_ptr<Expr>> body;
+    shared_ptr<Context> context;
+public:
+    Lambda(vector<Param>&& params, vector<shared_ptr<Expr>>&& body, shared_ptr<Context> context);
+    [[nodiscard]] shared_ptr<Context> getContext();
+    [[nodiscard]] const vector<Param>& getParams() const;
+    [[nodiscard]] vector<shared_ptr<Expr>>& getBody();
+    [[nodiscard]] string toString() const;
+};
+
+using PrimitiveProc = std::function<shared_ptr<Expr>(vector<shared_ptr<Expr>>&&)>;
+
+class Primitive {
+    PrimitiveProc proc;
+    string name;
+
+    explicit Primitive(PrimitiveProc proc, string name);
+public:
+
+    shared_ptr<Expr> operator()(vector<shared_ptr<Expr>>&& args) const;
+
+    [[nodiscard]] const string& getName() const;
+};
+
 #endif //GLOM_EXPR_H
