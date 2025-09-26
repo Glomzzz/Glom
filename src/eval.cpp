@@ -1,17 +1,15 @@
 //
 // Created by glom on 9/26/25.
 //
-#include "eval.h"
+
 #include "context.h"
 #include "expr.h"
+#include "error.h"
 
-EvalError::EvalError(const std::string& msg) : std::runtime_error(msg) {}
-
-template<typename T>
-shared_ptr<Expr> Context::eval_impl(T&& expr) {
+shared_ptr<Expr> Context::eval(shared_ptr<Expr> expr) {
     if (!expr)
     {
-        throw EvalError("Cannot evaluate null expression");
+        throw GlomError("Cannot evaluate null expression");
     }
 
     switch (expr->get_type())
@@ -21,124 +19,130 @@ shared_ptr<Expr> Context::eval_impl(T&& expr) {
     case BOOLEAN:
     case LAMBDA:
     case PRIMITIVE:
-        return std::forward<T>(expr);
+        return std::move(expr);
 
     case SYMBOL:
         {
             const auto& name = expr->as_string();
-            auto var = this->get(name);
+            auto var = get(name);
             if (!var)
             {
-                throw EvalError("Undefined variable: " + name);
+                throw GlomError("Undefined variable: " + name);
             }
             return var;
         }
 
-    case LIST:
+    case PAIR:
         {
-            auto list = getList(std::forward<T>(expr));
-            if (list.empty())
+            const auto pair = expr->as_pair();
+            auto proc = eval(std::move(pair->car()));
+            auto rest = pair->cdr();
+            shared_ptr<Pair> args = nullptr;
+            if (rest && rest->get_type() == PAIR)
             {
-                throw EvalError("Cannot evaluate empty list");
+                args = rest->as_pair();
+            } else if (rest)
+            {
+                args = Pair::single(std::move(rest));
             }
-
-            auto proc = eval(std::move(list[0]));
-            vector<shared_ptr<Expr>> args;
-            args.reserve(list.size() - 1);
-            for (size_t i = 1; i < list.size(); ++i) {
-                args.push_back(std::move(list[i]));
-            }
-
             return apply(std::move(proc), std::move(args));
         }
     default:
-        throw EvalError("Unsupported expression type");
+        throw GlomError("Unsupported expression type");
     }
 }
 
 
-template<typename T>
-auto getList(T&& expr) {
-    if constexpr (std::is_lvalue_reference_v<T>) {
-        return expr->as_list(); //Left value: reference
-    } else {
-        return std::move(expr->as_list());  //Right value: move
-    }
-}
-
-shared_ptr<Expr> Context::eval(const shared_ptr<Expr>& expr)
+bool Expr::to_boolean() const
 {
-    return eval_impl(expr);
-}
-
-
-shared_ptr<Expr> Context::eval(shared_ptr<Expr>&& expr)
-{
-    return eval_impl(std::move(expr));
-}
-
-
-shared_ptr<Context> eval_apply_context(const shared_ptr<Context>& parent, const vector<Param>& params, vector<shared_ptr<Expr>>&& args)
-{
-    auto context_builder = ContextBuilder(parent);
-    for (int i = 0; i < args.size(); i++)
+    if (get_type() != BOOLEAN)
     {
-        auto& param = params[i];
+        return true;
+    }
+    return as_boolean();
+}
+
+bool Expr::is_empty_list() const
+{
+    return get_type() == PAIR && as_pair()->empty();
+}
+
+
+shared_ptr<Context> Context::eval_apply_context(const shared_ptr<Expr>& proc, shared_ptr<Context> current_parent, const vector<Param>& params, shared_ptr<Pair>&& args)
+{
+    auto context = new_context(std::move(current_parent));
+    shared_ptr<Pair> pair = std::move(args);
+    shared_ptr<Expr> current = nullptr;
+    size_t index = 0;
+    while (index < params.size())
+    {
+        const auto& param = params[index];
         const auto& name = param.get_name();
         if (param.is_vararg())
         {
-            auto rest_args = std::vector<shared_ptr<Expr>>();
-            for (int j = i; j < args.size(); j++)
-            {
-                rest_args.push_back(std::move(args[j]));
-            }
-            const auto rest = std::make_shared<Expr>(Expr::make_list(std::move(rest_args)));
-            context_builder.set(name, std::move(rest));
+            add(name, Expr::make_pair(std::move(pair)));
+            index = params.size();
             break;
         }
-        context_builder.set(name,std::move(args[i]));
+        current = std::move(pair->car());
+        add(name, eval(std::move(current)));
+        index++;
+        if (!pair->cdr())
+            break;
+        if (pair->cdr()->get_type() != PAIR)
+        {
+            pair = Pair::single(pair->cdr());
+            continue;
+        }
+        pair = pair->cdr()->as_pair();
     }
-    return context_builder.build();
+    if (index < params.size())
+    {
+        throw GlomError("Too many arguments provided for " + proc->to_string());
+    }
+
+    return std::move(context);
 }
 
-shared_ptr<Expr> Context::apply(shared_ptr<Expr>&& proc, vector<shared_ptr<Expr>>&& args)
+shared_ptr<Expr> Context::apply(shared_ptr<Expr>&& proc, shared_ptr<Pair>&& args)
 {
     switch (proc->get_type())
     {
         case PRIMITIVE:
             {
                 const auto primitive = proc->as_primitive();
-                return (*primitive)(this,std::move(args));
+                return (*primitive)(shared_from_this(),std::move(args));
             }
         case LAMBDA:
             {
                 const auto lambda = proc->as_lambda();
                 const auto& params = lambda->get_params();
                 const auto& body = lambda->get_body();
-                shared_ptr<Context> context = nullptr;
+                shared_ptr<Context> apply_context = nullptr;
                 if (params.empty())
                 {
-                    context = lambda->get_context();
+                    apply_context = lambda->get_context();
                 } else
                 {
-                    context = eval_apply_context(lambda->get_context(), params, std::move(args));
+                    apply_context = eval_apply_context(proc, lambda->get_context(), params, std::move(args));
                 }
-                return context->eval(body);
+                return apply_context->eval(body);
             }
         default:
-            throw EvalError("First element in list is not a function");
+            throw GlomError("First element in list is not a function");
     }
 }
-
-shared_ptr<Expr> Context::eval(vector<shared_ptr<Expr>>&& exprs)
+shared_ptr<Expr> Context::eval(const shared_ptr<Pair>& exprs)
 {
     shared_ptr<Expr> current = nullptr;
-    for (auto& expr : exprs)
+    for (const auto expr : *exprs)
     {
-        current = eval(std::move(expr));
+        if (!expr) break;
+        current = eval(expr);
     }
     return current;
 }
+
 
 shared_ptr<Expr> Context::eval(const vector<shared_ptr<Expr>>& exprs)
 {
@@ -149,4 +153,3 @@ shared_ptr<Expr> Context::eval(const vector<shared_ptr<Expr>>& exprs)
     }
     return current;
 }
-

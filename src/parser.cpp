@@ -4,6 +4,7 @@
 
 #include "parser.h"
 #include "tokenizer.h"
+#include "expr.h"
 
 class Parser
 {
@@ -12,21 +13,28 @@ class Parser
 public:
     explicit Parser(string input) : tokenizer(std::move(input)){}
 
-    Expr parse_with(Token& token)
+    shared_ptr<Expr> parse_with(Token&& token)
     {
         switch (token.get_type())
         {
         case TOKEN_NUMBER:
             return Expr::make_number(token.as_number());
         case TOKEN_BOOLEAN:
-            return Expr::make_boolean(token.as_boolean());
+            {
+                if (token.as_boolean())
+                {
+                    return Expr::TRUE;
+                }
+                return Expr::FALSE;
+            }
         case TOKEN_STRING:
             return Expr::make_string(std::move(token.as_string()));
         case TOKEN_SYMBOL:
             return Expr::make_symbol(std::move(token.as_string()));
         case TOKEN_LPAREN:
             {
-                vector<shared_ptr<Expr>> elements;
+                shared_ptr<Pair> pair = nullptr;
+                shared_ptr<Pair> current = nullptr;
                 while (true)
                 {
                     Token nextToken = tokenizer.next();
@@ -34,17 +42,25 @@ public:
                     {
                         break;
                     }
-                    elements.push_back(std::make_shared<Expr>(parse_with(nextToken)));
+                    auto next_pair = Pair::single(parse_with(std::move(nextToken)));
+                    if (!pair)
+                    {
+                        pair = std::move(next_pair);
+                        current = pair;
+                        continue;
+                    }
+                    current->set_cdr(Expr::make_pair(next_pair));
+                    current = next_pair;
                 }
-                return Expr::make_list(elements);
+                if (!pair)
+                    return Expr::NIL;
+                return Expr::make_pair(pair);
             }
         case TOKEN_QUOTE:
             {
-                vector<shared_ptr<Expr>> elements;
-                elements.push_back(std::make_shared<Expr>(Expr::make_symbol("quote")));
-                Token nextToken = tokenizer.next();
-                elements.push_back(std::make_shared<Expr>(parse_with(nextToken)));
-                return Expr::make_list(elements);
+                const auto pair = Pair::single(Expr::make_symbol("quote"));
+                pair->set_cdr(parse_with(std::move(tokenizer.next())));
+                return Expr::make_pair(pair);
             }
         case TOKEN_RPAREN:
             throw std::runtime_error("Unexpected ')'");
@@ -61,7 +77,7 @@ public:
         Token token = tokenizer.next();
         while (token.get_type() != TOKEN_EOI)
         {
-            result.push_back(std::make_shared<Expr>(parse_with(token)));
+            result.push_back(parse_with(std::move(token)));
             token = tokenizer.next();
         }
         return result;

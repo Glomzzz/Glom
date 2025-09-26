@@ -4,49 +4,123 @@
 #include <memory>
 
 #include "expr.h"
+#include "primitive.h"
 
 using std::string;
 using std::vector;
 using std::shared_ptr;
 
+
+const shared_ptr<Pair> Pair::EMPTY = std::make_shared<Pair>(Pair());
+
+Pair::Pair(): data(nullptr), next(Expr::NIL) {}
+Pair::Pair(shared_ptr<Expr> expr) :data(std::move(expr)), next(Expr::NIL) {}
+Pair::Pair(shared_ptr<Expr> expr, shared_ptr<Expr> next) :data(std::move(expr)), next(std::move(next)) {}
+
+shared_ptr<Pair> Pair::single(shared_ptr<Expr> car)
+{
+    return cons(std::move(car), Expr::NIL);
+}
+shared_ptr<Pair> Pair::cons(shared_ptr<Expr> car, shared_ptr<Expr> cdr)
+{
+    return std::make_shared<Pair>(Pair(std::move(car), std::move(cdr)));
+}
+
+Pair::iterator::iterator(shared_ptr<Pair> pair): current(std::move(pair)) {}
+
+shared_ptr<Expr> Pair::iterator::operator*() const
+{
+    return current ? current->car() : nullptr;
+}
+
+Pair::iterator& Pair::iterator::operator++()
+{
+    if (current && current->cdr()) {
+        auto next_expr = current->cdr();
+        if (next_expr->get_type() == PAIR) {
+            current = next_expr->as_pair();
+        } else {
+            current = single(std::move(next_expr));
+        }
+    } else {
+        current = nullptr;
+    }
+    return *this;
+}
+
+Pair::iterator Pair::iterator::operator++(int)
+{
+    iterator temp = *this;
+    ++(*this);
+    return temp;
+}
+
+bool Pair::iterator::operator==(const iterator& other) const
+{
+    return current == other.current;
+}
+
+bool Pair::iterator::operator!=(const iterator& other) const
+{
+    return !(*this == other);
+}
+
+shared_ptr<Expr> Pair::car() const
+{
+    return data;
+}
+shared_ptr<Expr> Pair::cdr() const
+{
+    return next;
+}
+void Pair::set_car(shared_ptr<Expr> car)
+{
+    this->data = std::move(car);
+}
+void Pair::set_cdr(shared_ptr<Expr> cdr)
+{
+    this->next = std::move(cdr);
+}
+
+bool Pair::empty() const
+{
+    return data == nullptr;
+}
+
+
+
+string Pair::to_string() const
+{
+    if (empty())
+        return "()";
+    string result = "(";
+    shared_ptr<Expr> current = data;
+    while (current && current->get_type() == PAIR)
+    {
+        result += current->as_pair()->car()->to_string();
+        current = current->as_pair()->cdr();
+        if (current->get_type() == PAIR)
+            result += " ";
+    }
+    if (current->get_type() != PAIR)
+    {
+        result += " . " + current->to_string();
+    }
+    result += ")";
+    return result;
+}
+
+Expr::Expr(const ExprType type):type(type), value(monostate()) {}
 Expr::Expr(double v) :type(NUMBER), value(v) {}
 Expr::Expr(bool v) : type(BOOLEAN),value(v) {}
 
-Expr::Expr(vector<shared_ptr<Expr>>&& v) :type(LIST), value(std::move(v)) {}
+Expr::Expr(shared_ptr<Pair>&& v) :type(PAIR), value(std::move(v)) {}
 Expr::Expr(shared_ptr<Lambda>&& v) :type(LAMBDA), value(std::move(v)) {}
 Expr::Expr(shared_ptr<Primitive>&& v) :type(PRIMITIVE), value(std::move(v)) {}
 
 Expr::Expr(const ExprType type, string&& v) :type(type), value(std::move(v)) {}
 
-Expr Expr::make_boolean(const bool v)
-{
-    return Expr(v);
-}
-Expr Expr::make_number(const double v)
-{
-    return Expr(v);
-}
-Expr Expr::make_string(string v)
-{
-    return Expr(STRING, std::move(v));
-}
-Expr Expr::make_symbol(string v)
-{
-    return Expr(SYMBOL, std::move(v));
-}
 
-Expr Expr::make_list(vector<shared_ptr<Expr>> v)
-{
-    return Expr(std::move(v));
-}
-Expr Expr::make_lambda(shared_ptr<Lambda> v)
-{
-    return Expr(std::move(v));
-}
-Expr Expr::make_primitive(shared_ptr<Primitive> v)
-{
-    return Expr(std::move(v));
-}
 
 
 ExprType Expr::get_type() const
@@ -65,9 +139,13 @@ const string& Expr::as_string() const
 {
     return std::get<string>(value);
 }
-const vector<shared_ptr<Expr>>& Expr::as_list() const
+string&& Expr::move_string()
 {
-    return std::get<vector<shared_ptr<Expr>>>(value);
+    return std::move(std::get<string>(value));
+}
+shared_ptr<Pair> Expr::as_pair() const
+{
+    return std::get<shared_ptr<Pair>>(value);
 }
 shared_ptr<Lambda> Expr::as_lambda() const
 {
@@ -92,13 +170,45 @@ string Param::to_string() const
 {
     return name + (vararg ? "..." : "");
 }
+const std::shared_ptr<Expr> Expr::TRUE = std::make_shared<Expr>(true);
+const std::shared_ptr<Expr> Expr::FALSE = std::make_shared<Expr>(false);
+const std::shared_ptr<Expr> Expr::NOTHING = std::make_shared<Expr>(VOID);
+const std::shared_ptr<Expr> Expr::NIL = make_pair(Pair::EMPTY);
+
+shared_ptr<Expr> Expr::make_number(const double v)
+{
+    return std::make_shared<Expr>(Expr(v));
+}
+shared_ptr<Expr> Expr::make_boolean(const bool cond)
+{
+    return cond ? TRUE : FALSE;
+}
+shared_ptr<Expr> Expr::make_string(string v)
+{
+    return std::make_shared<Expr>(Expr(STRING, std::move(v)));
+}
+shared_ptr<Expr> Expr::make_symbol(string v)
+{
+    return std::make_shared<Expr>(Expr(SYMBOL, std::move(v)));
+}
+shared_ptr<Expr> Expr::make_lambda(shared_ptr<Lambda> v)
+{
+    return std::make_shared<Expr>(Expr(std::move(v)));
+}
+shared_ptr<Expr> Expr::make_primitive(shared_ptr<Primitive> v)
+{
+    return std::make_shared<Expr>(Expr(std::move(v)));
+}
+shared_ptr<Expr> Expr::make_pair(shared_ptr<Pair> v)
+{
+    return std::make_shared<Expr>(Expr(std::move(v)));
+}
 
 
-
-Lambda::Lambda(vector<Param>&& params, vector<shared_ptr<Expr>>&& body, shared_ptr<Context> context)
+Lambda::Lambda(vector<Param>&& params, shared_ptr<Pair> body, shared_ptr<Context> context)
     : params(std::move(params)), body(std::move(body)), context(std::move(context)) {}
 
-vector<shared_ptr<Expr>>& Lambda::get_body()
+shared_ptr<Pair> Lambda::get_body()
 {
     return body;
 }
@@ -123,24 +233,13 @@ string Lambda::to_string() const
             result += " ";
     }
     result += ")";
-    for (const auto& expr : body)
+    for (const auto& expr : *body)
     {
+        if (!expr) break;
         result += " " + expr->to_string();
     }
     result += ")";
     return result;
-}
-
-Primitive::Primitive(string name, PrimitiveProc proc) : name(std::move(name)),proc(std::move(proc)) {}
-
-shared_ptr<Expr> Primitive::operator()(Context* context, vector<shared_ptr<Expr>>&& args) const
-{
-    return proc(context, std::move(args));
-}
-
-const string& Primitive::get_name() const
-{
-    return name;
 }
 
 
@@ -156,19 +255,8 @@ string Expr::to_string() const
             return as_boolean() ? "true" : "false";
         case SYMBOL:
             return as_string();
-        case LIST:
-            {
-                const auto& list = as_list();
-                string result = "(";
-                for (size_t i = 0; i < list.size(); ++i)
-                {
-                    result += list[i]->to_string();
-                    if (i < list.size() - 1)
-                        result += " ";
-                }
-                result += ")";
-                return result;
-            }
+        case PAIR:
+            return as_pair()->to_string();
         case LAMBDA:
             return as_lambda()->to_string();
         case PRIMITIVE:

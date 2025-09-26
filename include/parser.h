@@ -5,7 +5,16 @@
 #ifndef GLOM_PARSER_H
 #define GLOM_PARSER_H
 
-#include "expr.h"
+#include <vector>
+#include <string>
+#include <memory>
+
+using std::string;
+using std::vector;
+using std::unique_ptr;
+using std::shared_ptr;
+
+class Expr;
 
 vector<shared_ptr<Expr>> parse(string&& input);
 vector<shared_ptr<Expr>> parse(const string& input);

@@ -4,6 +4,8 @@ add_library(glom
         expr.cpp
         context.cpp
         eval.cpp
+        primitive.cpp
+        error.cpp
 )
 
 target_include_directories(glom PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

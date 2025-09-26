@@ -5,17 +5,20 @@
 #ifndef GLOM_EXPR_H
 #define GLOM_EXPR_H
 
-#include <context.h>
-#include <functional>
+#include <utility>
 #include <vector>
 #include <string>
 #include <memory>
+#include <optional>
 #include <variant>
+#include "primitive.h"
+
 
 using std::string;
 using std::vector;
 using std::unique_ptr;
 using std::shared_ptr;
+using std::monostate;
 
 enum ExprType
 {
@@ -23,13 +26,62 @@ enum ExprType
     STRING,
     BOOLEAN,
     SYMBOL,
-    LIST,
+    PAIR,
     LAMBDA,
-    PRIMITIVE
+    PRIMITIVE,
+    VOID
 };
 
+class Context;
 class Lambda;
-class Primitive;
+
+class PairMaker;
+
+class Pair : public std::enable_shared_from_this<Pair>
+{
+    shared_ptr<Expr> data;
+    shared_ptr<Expr> next;
+
+    Pair();
+    explicit Pair(shared_ptr<Expr> expr);
+    explicit Pair(shared_ptr<Expr> expr, shared_ptr<Expr> next);
+public:
+    static const shared_ptr<Pair> EMPTY;
+    [[nodiscard]] shared_ptr<Expr> car() const;
+    [[nodiscard]] shared_ptr<Expr> cdr() const;
+    [[nodiscard]] string to_string() const;
+    [[nodiscard]] bool empty() const;
+    void set_car(shared_ptr<Expr> car);
+    void set_cdr(shared_ptr<Expr> cdr);
+
+    static shared_ptr<Pair> single(shared_ptr<Expr> car);
+    static shared_ptr<Pair> cons(shared_ptr<Expr> car, shared_ptr<Expr> cdr);
+
+    class iterator {
+        shared_ptr<Pair> current;
+    public:
+        explicit iterator(shared_ptr<Pair> pair = nullptr);
+
+        shared_ptr<Expr> operator*() const;
+
+        iterator& operator++();
+
+        iterator operator++(int);
+
+        bool operator==(const iterator& other) const;
+
+        bool operator!=(const iterator& other) const;
+    };
+
+    iterator begin() {
+        return empty() ? end() : iterator(shared_from_this());
+    }
+
+    iterator end() {
+        return iterator(nullptr);
+    }
+};
+
 
 /**
  * Expr class hierarchy representing different types of expressions.
@@ -37,9 +89,10 @@ class Primitive;
  * - String: Represents a string value.
  * - Boolean: Represents a boolean value.
  * - Symbol: Represents an identifier (i.e. variable name).
- * - List: Represents a list of expressions.
- * - Lambda: Represents a lambda function.
- * - Primitive: Represents a primitive members.
+ * - Pair: Represents a pair of expressions.
+ * - Lambda: Represents a lambda function. (Only constructed in runtime)
+ * - Primitive: Represents a primitive members. (Only constructed in c++)
+ * - None: Represents None.
  */
 class Expr {
     ExprType type;
@@ -47,34 +100,41 @@ class Expr {
         double,
         string,
         bool,
-        vector<shared_ptr<Expr>>,
+        shared_ptr<Pair>,
         shared_ptr<Lambda>,
-        shared_ptr<Primitive>
+        shared_ptr<Primitive>,
+        monostate
     > value;
-private:
     explicit Expr(double v);
-    explicit Expr(bool v);
-    explicit Expr(vector<shared_ptr<Expr>>&& v);
+    explicit Expr(shared_ptr<Pair>&& v);
     explicit Expr(shared_ptr<Lambda>&& v);
     explicit Expr(shared_ptr<Primitive>&& v);
     Expr(ExprType type, string&& v);
 public:
+    explicit Expr(bool v);
+    explicit Expr(ExprType type);
     [[nodiscard]] ExprType get_type() const;
     [[nodiscard]] double as_number() const;
     [[nodiscard]] const string& as_string() const;
+    [[nodiscard]] string&& move_string();
     [[nodiscard]] bool as_boolean() const;
-    [[nodiscard]] const vector<shared_ptr<Expr>>& as_list() const;
+    [[nodiscard]] shared_ptr<Pair> as_pair() const;
     [[nodiscard]] shared_ptr<Lambda> as_lambda() const;
     [[nodiscard]] shared_ptr<Primitive> as_primitive() const;
     [[nodiscard]] string to_string() const;
-
-    static Expr make_number(double v);
-    static Expr make_string(string v);
-    static Expr make_boolean(bool v);
-    static Expr make_symbol(string v);
-    static Expr make_list(vector<shared_ptr<Expr>> v);
-    static Expr make_lambda(shared_ptr<Lambda> v);
-    static Expr make_primitive(shared_ptr<Primitive> v);
+    [[nodiscard]] bool to_boolean() const;
+    [[nodiscard]] bool is_empty_list() const;
+    static const  shared_ptr<Expr> TRUE;
+    static const  shared_ptr<Expr> FALSE;
+    static const  shared_ptr<Expr> NIL;
+    static const  shared_ptr<Expr> NOTHING;
+    static shared_ptr<Expr> make_number(double v);
+    static shared_ptr<Expr> make_boolean(bool cond);
+    static shared_ptr<Expr> make_string(string v);
+    static shared_ptr<Expr> make_symbol(string v);
+    static shared_ptr<Expr> make_lambda(shared_ptr<Lambda> v);
+    static shared_ptr<Expr> make_primitive(shared_ptr<Primitive> v);
+    static shared_ptr<Expr> make_pair(shared_ptr<Pair> v);
 };
 
 
@@ -93,27 +153,16 @@ public:
 class Lambda
 {
     vector<Param> params;
-    vector<shared_ptr<Expr>> body;
+    shared_ptr<Pair> body;
     shared_ptr<Context> context;
 public:
-    Lambda(vector<Param>&& params, vector<shared_ptr<Expr>>&& body, shared_ptr<Context> context);
-    [[nodiscard]] shared_ptr<Context> get_context();
+    Lambda(vector<Param>&& params, shared_ptr<Pair> body, shared_ptr<Context> context);
     [[nodiscard]] const vector<Param>& get_params() const;
-    [[nodiscard]] vector<shared_ptr<Expr>>& get_body();
+    [[nodiscard]] shared_ptr<Context> get_context();
+    [[nodiscard]] shared_ptr<Pair> get_body();
     [[nodiscard]] string to_string() const;
 };
 
-using PrimitiveProc = std::function<shared_ptr<Expr>(Context*, vector<shared_ptr<Expr>>&&)>;
 
-class Primitive {
-    string name;
-    PrimitiveProc proc;
-public:
-    explicit Primitive(string name, PrimitiveProc proc);
-
-    shared_ptr<Expr> operator()(Context* context, vector<shared_ptr<Expr>>&& args) const;
-
-    [[nodiscard]] const string& get_name() const;
-};
 
 #endif //GLOM_EXPR_H

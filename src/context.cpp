@@ -2,29 +2,33 @@
 // Created by glom on 9/26/25.
 //
 #include "context.h"
-
 #include <utility>
+#include "expr.h"
 
 
-ContextBuilder::ContextBuilder(shared_ptr<Context> p) : parent(std::move(p)) {}
 
-ContextBuilder& ContextBuilder::set(const string& name, shared_ptr<Expr> value) {
-    bindings[name] = std::move(value);
-    return *this;
-}
-
-ContextBuilder& ContextBuilder::setParent(shared_ptr<Context> p) {
-    parent = std::move(p);
-    return *this;
-}
-
-shared_ptr<Context> ContextBuilder::build() {
-    return std::make_shared<Context>(Context{parent, std::move(bindings)});
-}
-
-Context::Context(shared_ptr<Context> parent) : parent(std::move(parent)) {}
 Context::Context(shared_ptr<Context> parent, variables&& vars)
     : parent(std::move(parent)), bindings(std::move(vars)) {}
+
+void Context::add(const string& name, shared_ptr<Expr> value) {
+    bindings[name] = std::move(value);
+}
+
+
+void Context::set_parent(shared_ptr<Context> new_parent) {
+    parent = std::move(new_parent);
+}
+
+shared_ptr<Context> Context::new_context() {
+    return std::make_shared<Context>(Context{nullptr,{}});
+}
+
+shared_ptr<Context> Context::new_context(shared_ptr<Context> parent) {
+    return std::make_shared<Context>(Context{std::move(parent), {}});
+}
+shared_ptr<Context> Context::new_context(shared_ptr<Context> parent, variables&& bindings) {
+    return std::make_shared<Context>(Context{std::move(parent), std::move(bindings)});
+}
 
 shared_ptr<Expr> Context::get(const string& name) const
 {
@@ -50,6 +54,23 @@ bool Context::has(const string& name) const
         return parent->has(name);
     }
     return false;
+}
+
+string Context::to_string() const
+{
+    string result = "{";
+    bool first = true;
+    for (const auto& [key, value] : bindings)
+    {
+        if (!first)
+        {
+            result += ", ";
+        }
+        result += key + ": " + value->to_string();
+        first = false;
+    }
+    result += "}";
+    return result;
 }
 
 
