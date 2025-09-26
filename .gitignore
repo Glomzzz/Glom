@@ -2,3 +2,7 @@
 cmake-build-debug
 cmake_test
 cmake_build
+.direnv
+cmake-build-release
+cmake-test
+result
