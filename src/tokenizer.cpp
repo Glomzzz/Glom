@@ -175,6 +175,16 @@ Token Tokenizer::next()
     }
     const char current = input[index];
 
+    if (current == ';')
+    {
+        // Skip comment until end of line
+        while (index < input.size() && input[index] != '\n') {
+            index++;
+        }
+        index++;
+        return next();
+    }
+
     if (current == '(')
     {
         index++;
