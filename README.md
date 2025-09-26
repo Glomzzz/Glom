@@ -16,6 +16,25 @@ Glom basically follows the [R5RS Scheme standard](https://docs.racket-lang.org/r
   - [ ] Delayed Evaluation
   - [ ] Module
   - [ ] Standard Library
+
+## Build & Test
+
+### Nix
+
+I highly recommend using Nix to build and test Glom, since it can manage dependencies easily.
+
+First and foremost, prepare your Nix and Flake:
+
+- Ensure you have enabled `experimental-features = nix-command flakes` in your Nix configuration.
+
+Then, you can build Glom with: `nix build .` and you can see the executable in `./result/bin/glom`.
+
+For testing, you can run: `nix flake check -L` to run the tests.
+
+### Other
+
+You can check `flake.nix` to see the dependencies and the steps of building & testing, you need at least CMake 3.31.7 and a C++20 compatible compiler.
+
 ## Why C++?
 
 I'm a Rustacean, so I don't like C++, naturally.
