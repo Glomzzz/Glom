@@ -20,51 +20,51 @@ Token::Token(bool x) : type(TOKEN_BOOLEAN), value(x) {};
 Token::Token(const TokenType token, string x) : type(token), value(std::move(x)) {};
 Token::Token(const TokenType token): type(token), value(monostate{}) {};
 
-TokenType Token::getType() const
+TokenType Token::get_type() const
 {
     return type;
 }
-double Token::asNumber() const
+double Token::as_number() const
 {
     return std::get<double>(value);
 }
-string& Token::asString()
+string& Token::as_string()
 {
     return std::get<string>(value);
 }
-bool Token::asBoolean() const
+bool Token::as_boolean() const
 {
     return std::get<bool>(value);
 }
-Token Token::makeNumber(const double x)
+Token Token::make_number(const double x)
 {
     return Token(x);
 }
-Token Token::makeBoolean(const bool x)
+Token Token::make_boolean(const bool x)
 {
     return Token(x);
 }
-Token Token::makeSymbol( string x)
+Token Token::make_symbol( string x)
 {
     return Token(TOKEN_SYMBOL, std::move(x));
 }
-Token Token::makeString( string x)
+Token Token::make_string( string x)
 {
     return Token(TOKEN_STRING, std::move(x));
 }
-Token Token::makeLParen()
+Token Token::make_left_paren()
 {
     return Token(TOKEN_LPAREN);
 }
-Token Token::makeRParen()
+Token Token::make_right_paren()
 {
     return Token(TOKEN_RPAREN);
 }
-Token Token::makeQuote()
+Token Token::make_quote()
 {
     return Token(TOKEN_QUOTE);
 }
-Token Token::makeEOI()
+Token Token::make_end_of_input()
 {
     return Token(TOKEN_EOI);
 }
@@ -74,7 +74,7 @@ Token Token::makeEOI()
 Tokenizer::Tokenizer(string input): input(std::move(input)), index(0){}
 
 
-Token Tokenizer::nextNumber()
+Token Tokenizer::next_number()
 {
     const size_t start = index;
 
@@ -100,13 +100,13 @@ Token Tokenizer::nextNumber()
     const string numberStr = input.substr(start, index - start);
     try {
         const double value = std::stod(numberStr);
-        return Token::makeNumber(value);
+        return Token::make_number(value);
     } catch (const std::exception& _) {
         throw std::runtime_error("Invalid number format: " + numberStr);
     }
 }
 
-Token Tokenizer::nextString()
+Token Tokenizer::next_string()
 {
     index++; // Skip "
     bool escaped = false;
@@ -138,7 +138,7 @@ Token Tokenizer::nextString()
                 // End of string
                 index++;
                 const string str = stream.str();
-                return Token::makeString(str);
+                return Token::make_string(str);
             }
         default:
             stream << current;
@@ -149,7 +149,7 @@ Token Tokenizer::nextString()
     throw std::runtime_error("Unterminated string literal");
 }
 
-Token Tokenizer::nextSymbolOrBoolean()
+Token Tokenizer::next_symbol_or_boolean()
 {
     const size_t start = index;
     while (index < input.size()
@@ -160,35 +160,35 @@ Token Tokenizer::nextSymbolOrBoolean()
     }
     const string ident = input.substr(start, index - start);
     if (ident == "true" || ident == "#t") {
-        return Token::makeBoolean(true);
+        return Token::make_boolean(true);
     }
     if (ident == "false"|| ident == "#f") {
-        return Token::makeBoolean(false);
+        return Token::make_boolean(false);
     }
-    return Token::makeSymbol(ident);
+    return Token::make_symbol(ident);
 }
 
 Token Tokenizer::next()
 {
     if (index >= input.size()) {
-        return Token::makeEOI();
+        return Token::make_end_of_input();
     }
     const char current = input[index];
 
     if (current == '(')
     {
         index++;
-        return Token::makeLParen();
+        return Token::make_left_paren();
     }
     if (current == ')')
     {
         index++;
-        return  Token::makeRParen();
+        return  Token::make_right_paren();
     }
     if (current == '\'')
     {
         index++;
-        return Token::makeQuote();
+        return Token::make_quote();
     }
     if (isspace(current))
     {
@@ -199,11 +199,11 @@ Token Tokenizer::next()
         || ((current == '+' || current == '-')
             && index + 1 < input.size() && std::isdigit(input[index + 1])))
     {
-        return nextNumber();
+        return next_number();
     }
     if (current == '"')
     {
-        return nextString();
+        return next_string();
     }
-    return nextSymbolOrBoolean();
+    return next_symbol_or_boolean();
 }

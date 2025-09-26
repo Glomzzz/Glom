@@ -18,62 +18,62 @@ Expr::Expr(shared_ptr<Primitive>&& v) :type(PRIMITIVE), value(std::move(v)) {}
 
 Expr::Expr(const ExprType type, string&& v) :type(type), value(std::move(v)) {}
 
-Expr Expr::makeBoolean(const bool v)
+Expr Expr::make_boolean(const bool v)
 {
     return Expr(v);
 }
-Expr Expr::makeNumber(const double v)
+Expr Expr::make_number(const double v)
 {
     return Expr(v);
 }
-Expr Expr::makeString(string v)
+Expr Expr::make_string(string v)
 {
     return Expr(STRING, std::move(v));
 }
-Expr Expr::makeSymbol(string v)
+Expr Expr::make_symbol(string v)
 {
     return Expr(SYMBOL, std::move(v));
 }
 
-Expr Expr::makeList(vector<shared_ptr<Expr>> v)
+Expr Expr::make_list(vector<shared_ptr<Expr>> v)
 {
     return Expr(std::move(v));
 }
-Expr Expr::makeLambda(shared_ptr<Lambda> v)
+Expr Expr::make_lambda(shared_ptr<Lambda> v)
 {
     return Expr(std::move(v));
 }
-Expr Expr::makePrimitive(shared_ptr<Primitive> v)
+Expr Expr::make_primitive(shared_ptr<Primitive> v)
 {
     return Expr(std::move(v));
 }
 
 
-ExprType Expr::getType() const
+ExprType Expr::get_type() const
 {
     return type;
 }
-bool Expr::asBoolean() const
+bool Expr::as_boolean() const
 {
     return std::get<bool>(value);
 }
-double Expr::asNumber() const
+double Expr::as_number() const
 {
     return std::get<double>(value);
 }
-const string& Expr::asString() const
+const string& Expr::as_string() const
 {
     return std::get<string>(value);
 }
-const vector<shared_ptr<Expr>>& Expr::asList() const
+const vector<shared_ptr<Expr>>& Expr::as_list() const
 {
     return std::get<vector<shared_ptr<Expr>>>(value);
 }
-shared_ptr<Lambda> Expr::asLambda() const
+shared_ptr<Lambda> Expr::as_lambda() const
 {
     return std::get<shared_ptr<Lambda>>(value);
 }
-shared_ptr<Primitive> Expr::asPrimitive() const
+shared_ptr<Primitive> Expr::as_primitive() const
 {
     return std::get<shared_ptr<Primitive>>(value);
 }
@@ -81,14 +81,14 @@ shared_ptr<Primitive> Expr::asPrimitive() const
 
 Param::Param(string name, const bool vararg) : name(std::move(name)), vararg(vararg) {}
 
-bool Param::isVararg() const {
+bool Param::is_vararg() const {
     return vararg;
 }
-const string& Param::getName() const
+const string& Param::get_name() const
 {
     return name;
 }
-string Param::toString() const
+string Param::to_string() const
 {
     return name + (vararg ? "..." : "");
 }
@@ -98,34 +98,34 @@ string Param::toString() const
 Lambda::Lambda(vector<Param>&& params, vector<shared_ptr<Expr>>&& body, shared_ptr<Context> context)
     : params(std::move(params)), body(std::move(body)), context(std::move(context)) {}
 
-vector<shared_ptr<Expr>>& Lambda::getBody()
+vector<shared_ptr<Expr>>& Lambda::get_body()
 {
     return body;
 }
 
-shared_ptr<Context> Lambda::getContext()
+shared_ptr<Context> Lambda::get_context()
 {
     return context;
 }
 
-const vector<Param>& Lambda::getParams() const
+const vector<Param>& Lambda::get_params() const
 {
     return params;
 }
 
-string Lambda::toString() const
+string Lambda::to_string() const
 {
     string result = "(lambda (";
     for (size_t i = 0; i < params.size(); ++i)
     {
-        result += params[i].toString();
+        result += params[i].to_string();
         if (i < params.size() - 1)
             result += " ";
     }
     result += ")";
     for (const auto& expr : body)
     {
-        result += " " + expr->toString();
+        result += " " + expr->to_string();
     }
     result += ")";
     return result;
@@ -138,31 +138,31 @@ shared_ptr<Expr> Primitive::operator()(vector<shared_ptr<Expr>>&& args) const
     return proc(std::move(args));
 }
 
-const string& Primitive::getName() const
+const string& Primitive::get_name() const
 {
     return name;
 }
 
 
-string Expr::toString() const
+string Expr::to_string() const
 {
     switch (type)
     {
         case NUMBER:
-            return std::to_string(asNumber());
+            return std::to_string(as_number());
         case STRING:
-            return "\"" + asString() + "\"";
+            return "\"" + as_string() + "\"";
         case BOOLEAN:
-            return asBoolean() ? "true" : "false";
+            return as_boolean() ? "true" : "false";
         case SYMBOL:
-            return asString();
+            return as_string();
         case LIST:
             {
-                const auto& list = asList();
+                const auto& list = as_list();
                 string result = "(";
                 for (size_t i = 0; i < list.size(); ++i)
                 {
-                    result += list[i]->toString();
+                    result += list[i]->to_string();
                     if (i < list.size() - 1)
                         result += " ";
                 }
@@ -170,9 +170,9 @@ string Expr::toString() const
                 return result;
             }
         case LAMBDA:
-            return asLambda()->toString();
+            return as_lambda()->to_string();
         case PRIMITIVE:
-            return "<primitive:" + asPrimitive()->getName();
+            return "<primitive:" + as_primitive()->get_name();
         default:
             return "Unknown";
     }

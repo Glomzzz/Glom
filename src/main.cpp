@@ -23,7 +23,7 @@ void repl()
             }
             auto context = Context(nullptr);
             auto result = context.eval(std::move(exprs));
-            cout << result->toString() << endl;
+            cout << result->to_string() << endl;
         }catch (std::exception& e)
         {
             cout << "Error: " << e.what() << endl;

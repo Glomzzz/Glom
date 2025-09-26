@@ -59,22 +59,22 @@ private:
     explicit Expr(shared_ptr<Primitive>&& v);
     Expr(ExprType type, string&& v);
 public:
-    [[nodiscard]] ExprType getType() const;
-    [[nodiscard]] double asNumber() const;
-    [[nodiscard]] const string& asString() const;
-    [[nodiscard]] bool asBoolean() const;
-    [[nodiscard]] const vector<shared_ptr<Expr>>& asList() const;
-    [[nodiscard]] shared_ptr<Lambda> asLambda() const;
-    [[nodiscard]] shared_ptr<Primitive> asPrimitive() const;
-    [[nodiscard]] string toString() const;
+    [[nodiscard]] ExprType get_type() const;
+    [[nodiscard]] double as_number() const;
+    [[nodiscard]] const string& as_string() const;
+    [[nodiscard]] bool as_boolean() const;
+    [[nodiscard]] const vector<shared_ptr<Expr>>& as_list() const;
+    [[nodiscard]] shared_ptr<Lambda> as_lambda() const;
+    [[nodiscard]] shared_ptr<Primitive> as_primitive() const;
+    [[nodiscard]] string to_string() const;
 
-    static Expr makeNumber(double v);
-    static Expr makeString(string v);
-    static Expr makeBoolean(bool v);
-    static Expr makeSymbol(string v);
-    static Expr makeList(vector<shared_ptr<Expr>> v);
-    static Expr makeLambda(shared_ptr<Lambda> v);
-    static Expr makePrimitive(shared_ptr<Primitive> v);
+    static Expr make_number(double v);
+    static Expr make_string(string v);
+    static Expr make_boolean(bool v);
+    static Expr make_symbol(string v);
+    static Expr make_list(vector<shared_ptr<Expr>> v);
+    static Expr make_lambda(shared_ptr<Lambda> v);
+    static Expr make_primitive(shared_ptr<Primitive> v);
 };
 
 
@@ -85,9 +85,9 @@ class Param
     bool vararg = false;
 public:
     explicit Param(string name, bool vararg = false);
-    [[nodiscard]] const string& getName() const;
-    [[nodiscard]] bool isVararg() const;
-    [[nodiscard]] string toString() const;
+    [[nodiscard]] const string& get_name() const;
+    [[nodiscard]] bool is_vararg() const;
+    [[nodiscard]] string to_string() const;
 };
 
 class Lambda
@@ -97,10 +97,10 @@ class Lambda
     shared_ptr<Context> context;
 public:
     Lambda(vector<Param>&& params, vector<shared_ptr<Expr>>&& body, shared_ptr<Context> context);
-    [[nodiscard]] shared_ptr<Context> getContext();
-    [[nodiscard]] const vector<Param>& getParams() const;
-    [[nodiscard]] vector<shared_ptr<Expr>>& getBody();
-    [[nodiscard]] string toString() const;
+    [[nodiscard]] shared_ptr<Context> get_context();
+    [[nodiscard]] const vector<Param>& get_params() const;
+    [[nodiscard]] vector<shared_ptr<Expr>>& get_body();
+    [[nodiscard]] string to_string() const;
 };
 
 using PrimitiveProc = std::function<shared_ptr<Expr>(vector<shared_ptr<Expr>>&&)>;
@@ -114,7 +114,7 @@ public:
 
     shared_ptr<Expr> operator()(vector<shared_ptr<Expr>>&& args) const;
 
-    [[nodiscard]] const string& getName() const;
+    [[nodiscard]] const string& get_name() const;
 };
 
 #endif //GLOM_EXPR_H

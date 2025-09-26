@@ -35,20 +35,20 @@ class Token
     explicit Token(TokenType token);
     Token(TokenType token, string x);
 public:
-    TokenType getType() const;
+    TokenType get_type() const;
 
-     double asNumber() const;
-    bool asBoolean() const;
-    string& asString();
+    double as_number() const;
+    bool as_boolean() const;
+    string& as_string();
 
-    static Token makeNumber(double x);
-    static Token makeString(string x);
-    static Token makeBoolean(bool x);
-    static Token makeSymbol(string x);
-    static Token makeLParen();
-    static Token makeRParen();
-    static Token makeQuote();
-    static Token makeEOI();
+    static Token make_number(double x);
+    static Token make_string(string x);
+    static Token make_boolean(bool x);
+    static Token make_symbol(string x);
+    static Token make_left_paren();
+    static Token make_right_paren();
+    static Token make_quote();
+    static Token make_end_of_input();
 };
 
 
@@ -57,9 +57,9 @@ class Tokenizer
     string input;
     size_t index;
 
-    Token nextNumber();
-    Token nextString();
-    Token nextSymbolOrBoolean();
+    Token next_number();
+    Token next_string();
+    Token next_symbol_or_boolean();
 
 public:
     explicit Tokenizer(string input);
