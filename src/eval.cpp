@@ -108,7 +108,7 @@ shared_ptr<Expr> Context::apply(shared_ptr<Expr>&& proc, vector<shared_ptr<Expr>
         case PRIMITIVE:
             {
                 const auto primitive = proc->as_primitive();
-                return (*primitive)(std::move(args));
+                return (*primitive)(this,std::move(args));
             }
         case LAMBDA:
             {

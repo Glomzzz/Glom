@@ -103,16 +103,15 @@ public:
     [[nodiscard]] string to_string() const;
 };
 
-using PrimitiveProc = std::function<shared_ptr<Expr>(vector<shared_ptr<Expr>>&&)>;
+using PrimitiveProc = std::function<shared_ptr<Expr>(Context*, vector<shared_ptr<Expr>>&&)>;
 
 class Primitive {
-    PrimitiveProc proc;
     string name;
-
-    explicit Primitive(PrimitiveProc proc, string name);
+    PrimitiveProc proc;
 public:
+    explicit Primitive(string name, PrimitiveProc proc);
 
-    shared_ptr<Expr> operator()(vector<shared_ptr<Expr>>&& args) const;
+    shared_ptr<Expr> operator()(Context* context, vector<shared_ptr<Expr>>&& args) const;
 
     [[nodiscard]] const string& get_name() const;
 };

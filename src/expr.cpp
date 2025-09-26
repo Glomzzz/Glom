@@ -131,11 +131,11 @@ string Lambda::to_string() const
     return result;
 }
 
-Primitive::Primitive(PrimitiveProc proc, string name) : proc(std::move(proc)), name(std::move(name)) {}
+Primitive::Primitive(string name, PrimitiveProc proc) : name(std::move(name)),proc(std::move(proc)) {}
 
-shared_ptr<Expr> Primitive::operator()(vector<shared_ptr<Expr>>&& args) const
+shared_ptr<Expr> Primitive::operator()(Context* context, vector<shared_ptr<Expr>>&& args) const
 {
-    return proc(std::move(args));
+    return proc(context, std::move(args));
 }
 
 const string& Primitive::get_name() const
