@@ -21,7 +21,9 @@ void repl()
             {
                 continue;
             }
-            cout << exprs[exprs.size() - 1]->toString() << endl;
+            auto context = Context(nullptr);
+            auto result = context.eval(std::move(exprs));
+            cout << result->toString() << endl;
         }catch (std::exception& e)
         {
             cout << "Error: " << e.what() << endl;

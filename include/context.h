@@ -44,8 +44,12 @@ public:
 
     shared_ptr<Expr> eval(const shared_ptr<Expr>& expr);
     shared_ptr<Expr> eval(shared_ptr<Expr>&& expr);
+    shared_ptr<Expr> eval(const vector<shared_ptr<Expr>>& exprs);
+    shared_ptr<Expr> eval(vector<shared_ptr<Expr>>&& exprs);
 private:
-    shared_ptr<Expr> apply(shared_ptr<Expr>&& proc, vector<shared_ptr<Expr>>&& args);
+    template <class T>
+    shared_ptr<Expr> evalImpl(T&& expr);
+    static shared_ptr<Expr> apply(shared_ptr<Expr>&& proc, vector<shared_ptr<Expr>>&& args);
 };
 
 
