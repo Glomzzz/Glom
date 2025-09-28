@@ -5,20 +5,21 @@
 #ifndef GLOM_EXPR_H
 #define GLOM_EXPR_H
 
-#include <utility>
 #include <vector>
 #include <string>
 #include <memory>
-#include <optional>
 #include <variant>
+#include <unordered_set>
+#include <shared_mutex>
 #include "primitive.h"
 
-
 using std::string;
+using std::string_view;
 using std::vector;
 using std::unique_ptr;
 using std::shared_ptr;
 using std::monostate;
+
 
 enum ExprType
 {
@@ -83,6 +84,34 @@ public:
 };
 
 
+class SymbolPool {
+    std::unordered_set<string> pool;
+    std::shared_mutex mutex;
+
+public:
+    static SymbolPool& instance();
+
+    string_view intern(const string& s);
+
+    string_view intern(string&& s);
+
+    size_t size() const;
+};
+
+string view_to_string(const string_view& view);
+
+using ExprValue = std::variant<
+    std::monostate,
+    double,                 // number
+    std::string,            // string literal/value
+    std::string_view,       // symbol (interned)
+    bool,
+    std::shared_ptr<Pair>,
+    std::shared_ptr<Lambda>,
+    std::shared_ptr<Primitive>
+>;
+
+
 /**
  * Expr class hierarchy representing different types of expressions.
  * - Number: Represents a numeric value.
@@ -95,35 +124,29 @@ public:
  * - None: Represents None.
  */
 class Expr {
+
     ExprType type;
-    std::variant<
-        double,
-        string,
-        bool,
-        shared_ptr<Pair>,
-        shared_ptr<Lambda>,
-        shared_ptr<Primitive>,
-        monostate
-    > value;
-    explicit Expr(double v);
+    ExprValue value;
     explicit Expr(shared_ptr<Pair>&& v);
     explicit Expr(shared_ptr<Lambda>&& v);
     explicit Expr(shared_ptr<Primitive>&& v);
-    Expr(ExprType type, string&& v);
+    explicit Expr(string&& v);
+    explicit Expr(string_view v);
 public:
     explicit Expr(bool v);
+    explicit Expr(double v);
     explicit Expr(ExprType type);
     [[nodiscard]] ExprType get_type() const;
     [[nodiscard]] double as_number() const;
     [[nodiscard]] const string& as_string() const;
-    [[nodiscard]] string&& move_string();
+    [[nodiscard]] const string_view& as_symbol() const;
     [[nodiscard]] bool as_boolean() const;
     [[nodiscard]] shared_ptr<Pair> as_pair() const;
     [[nodiscard]] shared_ptr<Lambda> as_lambda() const;
     [[nodiscard]] shared_ptr<Primitive> as_primitive() const;
     [[nodiscard]] string to_string() const;
     [[nodiscard]] bool to_boolean() const;
-    [[nodiscard]] bool is_empty_list() const;
+    [[nodiscard]] bool is_nil() const;
     static const  shared_ptr<Expr> TRUE;
     static const  shared_ptr<Expr> FALSE;
     static const  shared_ptr<Expr> NIL;
@@ -141,11 +164,11 @@ public:
 
 class Param
 {
-    string name;
+    string_view name;
     bool vararg = false;
 public:
-    explicit Param(string name, bool vararg = false);
-    [[nodiscard]] const string& get_name() const;
+    explicit Param(string_view name, bool vararg = false);
+    [[nodiscard]] const string_view& get_name() const;
     [[nodiscard]] bool is_vararg() const;
     [[nodiscard]] string to_string() const;
 };

@@ -20,7 +20,7 @@ using std::unordered_map;
 class Expr;
 class Param;
 
-typedef unordered_map<string, shared_ptr<Expr>> variables;
+typedef unordered_map<std::string_view, shared_ptr<Expr>> variables;
 /**
  * Context for variable bindings.
  */
@@ -32,12 +32,12 @@ protected:
     shared_ptr<Context> parent = nullptr;
     variables bindings;
 public:
-    shared_ptr<Expr> get(const string& name) const;
-    bool has(const string& name) const;
+    shared_ptr<Expr> get(const std::string_view& name) const;
+    bool has(const std::string_view& name) const;
     Context& operator=(const Context&) = delete;
 
     void set_parent(shared_ptr<Context> new_parent);
-    void add(const string& name, shared_ptr<Expr> value);
+    void add(std::string_view name, shared_ptr<Expr> value);
     void add_primitive(const string& name, PrimitiveProc proc);
 
     shared_ptr<Expr> eval(shared_ptr<Expr> expr);

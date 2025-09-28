@@ -16,8 +16,8 @@ using std::shared_ptr;
 
 class Expr;
 
-vector<shared_ptr<Expr>> parse(string&& input);
-vector<shared_ptr<Expr>> parse(const string& input);
+shared_ptr<Expr> parse_expr(string input);
+vector<shared_ptr<Expr>> parse(string input);
 
 
 #endif //GLOM_PARSER_H

@@ -44,13 +44,13 @@ Token Token::make_boolean(const bool x)
 {
     return Token(x);
 }
-Token Token::make_symbol( string x)
+Token Token::make_symbol(string x)
 {
-    return Token(TOKEN_SYMBOL, std::move(x));
+    return Token{TOKEN_SYMBOL, std::move(x)};
 }
-Token Token::make_string( string x)
+Token Token::make_string(string x)
 {
-    return Token(TOKEN_STRING, std::move(x));
+    return Token{TOKEN_STRING, std::move(x)};
 }
 Token Token::make_left_paren()
 {

@@ -36,7 +36,6 @@ class Token
     Token(TokenType token, string x);
 public:
     TokenType get_type() const;
-
     double as_number() const;
     bool as_boolean() const;
     string& as_string();

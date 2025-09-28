@@ -10,7 +10,7 @@
 Context::Context(shared_ptr<Context> parent, variables&& vars)
     : parent(std::move(parent)), bindings(std::move(vars)) {}
 
-void Context::add(const string& name, shared_ptr<Expr> value) {
+void Context::add(const string_view name, shared_ptr<Expr> value) {
     bindings[name] = std::move(value);
 }
 
@@ -30,7 +30,7 @@ shared_ptr<Context> Context::new_context(shared_ptr<Context> parent, variables&&
     return std::make_shared<Context>(Context{std::move(parent), std::move(bindings)});
 }
 
-shared_ptr<Expr> Context::get(const string& name) const
+shared_ptr<Expr> Context::get(const string_view& name) const
 {
     if (bindings.contains(name))
     {
@@ -43,7 +43,7 @@ shared_ptr<Expr> Context::get(const string& name) const
     return nullptr;
 }
 
-bool Context::has(const string& name) const
+bool Context::has(const string_view& name) const
 {
     if (bindings.contains(name))
     {
@@ -66,7 +66,7 @@ string Context::to_string() const
         {
             result += ", ";
         }
-        result += key + ": " + value->to_string();
+        result += view_to_string(key) + ": " + value->to_string();
         first = false;
     }
     result += "}";

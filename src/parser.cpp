@@ -83,14 +83,18 @@ public:
         return result;
     }
 };
-vector<shared_ptr<Expr>> parse(string&& input)
+
+shared_ptr<Expr> parse_expr(string input)
+{
+    auto exprs = parse(std::move(input));
+    if (exprs.size() != 1)
+    {
+        throw std::runtime_error("Expected a single expression, got " + std::to_string(exprs.size()));
+    }
+    return exprs[0];
+}
+vector<shared_ptr<Expr>> parse(string input)
 {
     Parser parser(std::move(input));
     return parser.parse();
 }
-vector<shared_ptr<Expr>> parse(const string& input)
-{
-    Parser parser(input);
-    return parser.parse();
-}
-

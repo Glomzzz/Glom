@@ -10,7 +10,6 @@ using std::string;
 using std::vector;
 using std::shared_ptr;
 
-
 const shared_ptr<Pair> Pair::EMPTY = std::make_shared<Pair>(Pair());
 
 Pair::Pair(): data(nullptr), next(Expr::NIL) {}
@@ -95,30 +94,39 @@ string Pair::to_string() const
         return "()";
     string result = "(";
     shared_ptr<Expr> current = data;
+
+    result += current->to_string();
+    current = next;
+
     while (current && current->get_type() == PAIR)
     {
-        result += current->as_pair()->car()->to_string();
-        current = current->as_pair()->cdr();
-        if (current->get_type() == PAIR)
-            result += " ";
+        const auto pair = current->as_pair();
+        if (pair->empty())
+        {
+            current = nullptr;
+            break;
+        }
+        result += " ";
+        result += pair->car()->to_string();
+        current = pair->cdr();
     }
-    if (current->get_type() != PAIR)
-    {
+    if (current)
         result += " . " + current->to_string();
-    }
     result += ")";
     return result;
 }
 
-Expr::Expr(const ExprType type):type(type), value(monostate()) {}
-Expr::Expr(double v) :type(NUMBER), value(v) {}
-Expr::Expr(bool v) : type(BOOLEAN),value(v) {}
+
+Expr::Expr(const ExprType type):type(type) {}
+Expr::Expr(const double v) :type(NUMBER), value(v) {}
+Expr::Expr(const bool v) : type(BOOLEAN),value(v) {}
 
 Expr::Expr(shared_ptr<Pair>&& v) :type(PAIR), value(std::move(v)) {}
 Expr::Expr(shared_ptr<Lambda>&& v) :type(LAMBDA), value(std::move(v)) {}
 Expr::Expr(shared_ptr<Primitive>&& v) :type(PRIMITIVE), value(std::move(v)) {}
 
-Expr::Expr(const ExprType type, string&& v) :type(type), value(std::move(v)) {}
+Expr::Expr(string&& v) :type(STRING), value(std::move(v)) {}
+Expr::Expr(const string_view v): type(SYMBOL), value(v) {}
 
 
 
@@ -139,10 +147,11 @@ const string& Expr::as_string() const
 {
     return std::get<string>(value);
 }
-string&& Expr::move_string()
+const string_view& Expr::as_symbol() const
 {
-    return std::move(std::get<string>(value));
+    return std::get<string_view>(value);
 }
+
 shared_ptr<Pair> Expr::as_pair() const
 {
     return std::get<shared_ptr<Pair>>(value);
@@ -157,19 +166,45 @@ shared_ptr<Primitive> Expr::as_primitive() const
 }
 
 
-Param::Param(string name, const bool vararg) : name(std::move(name)), vararg(vararg) {}
+Param::Param(const string_view name, const bool vararg) : name(name), vararg(vararg) {}
 
 bool Param::is_vararg() const {
     return vararg;
 }
-const string& Param::get_name() const
+const string_view& Param::get_name() const
 {
     return name;
 }
 string Param::to_string() const
 {
-    return name + (vararg ? "..." : "");
+    return view_to_string(name) + "...";
 }
+
+SymbolPool& SymbolPool::instance() {
+    static SymbolPool inst;
+    return inst;
+}
+
+string_view SymbolPool::intern(const string& s) {
+    std::lock_guard lk(mutex);
+    auto [it, inserted] = pool.emplace(s);
+    return string_view(*it);
+}
+
+string_view SymbolPool::intern(string&& s) {
+    std::lock_guard lk(mutex);
+    auto [it, inserted] = pool.emplace(std::move(s));
+    return string_view(*it);
+}
+
+size_t SymbolPool::size() const {
+    return pool.size();
+}
+
+string view_to_string(const string_view& view) {
+    return {view.data(), view.size()};
+}
+
 const std::shared_ptr<Expr> Expr::TRUE = std::make_shared<Expr>(true);
 const std::shared_ptr<Expr> Expr::FALSE = std::make_shared<Expr>(false);
 const std::shared_ptr<Expr> Expr::NOTHING = std::make_shared<Expr>(VOID);
@@ -177,7 +212,7 @@ const std::shared_ptr<Expr> Expr::NIL = make_pair(Pair::EMPTY);
 
 shared_ptr<Expr> Expr::make_number(const double v)
 {
-    return std::make_shared<Expr>(Expr(v));
+    return std::make_shared<Expr>(v);
 }
 shared_ptr<Expr> Expr::make_boolean(const bool cond)
 {
@@ -185,11 +220,12 @@ shared_ptr<Expr> Expr::make_boolean(const bool cond)
 }
 shared_ptr<Expr> Expr::make_string(string v)
 {
-    return std::make_shared<Expr>(Expr(STRING, std::move(v)));
+    return std::make_shared<Expr>(Expr(std::move(v)));
 }
 shared_ptr<Expr> Expr::make_symbol(string v)
 {
-    return std::make_shared<Expr>(Expr(SYMBOL, std::move(v)));
+    auto str_view = SymbolPool::instance().intern(std::move(v));
+    return std::make_shared<Expr>(Expr(str_view));
 }
 shared_ptr<Expr> Expr::make_lambda(shared_ptr<Lambda> v)
 {
@@ -254,7 +290,7 @@ string Expr::to_string() const
         case BOOLEAN:
             return as_boolean() ? "true" : "false";
         case SYMBOL:
-            return as_string();
+            return view_to_string(as_symbol());
         case PAIR:
             return as_pair()->to_string();
         case LAMBDA:

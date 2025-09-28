@@ -23,40 +23,40 @@ TEST_F(TokenizerTest, BasicNumberParsing)
 {
     Tokenizer tokenizer("123");
     const Token token = tokenizer.next();
-    EXPECT_EQ(token.type, TOKEN_NUMBER);
-    EXPECT_DOUBLE_EQ(std::get<double>(token.value), 123.0);
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER);
+    EXPECT_DOUBLE_EQ(token.as_number(), 123.0);
 }
 
 TEST_F(TokenizerTest, DecimalNumberParsing)
 {
     Tokenizer tokenizer("45.67");
     const Token token = tokenizer.next();
-    EXPECT_EQ(token.type, TOKEN_NUMBER);
-    EXPECT_DOUBLE_EQ(std::get<double>(token.value), 45.67);
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER);
+    EXPECT_DOUBLE_EQ(token.as_number(), 45.67);
 }
 
 TEST_F(TokenizerTest, NegativeNumberParsing)
 {
     Tokenizer tokenizer("-89");
     const Token token = tokenizer.next();
-    EXPECT_EQ(token.type, TOKEN_NUMBER);
-    EXPECT_DOUBLE_EQ(std::get<double>(token.value), -89.0);
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER);
+    EXPECT_DOUBLE_EQ(token.as_number(), -89.0);
 }
 
 TEST_F(TokenizerTest, StringParsing)
 {
     Tokenizer tokenizer("\"hello world\"");
-    const Token token = tokenizer.next();
-    EXPECT_EQ(token.type, TOKEN_STRING);
-    EXPECT_EQ(std::get<std::string>(token.value), "hello world");
+    Token token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_STRING);
+    EXPECT_EQ(token.as_string(), "hello world");
 }
 
 TEST_F(TokenizerTest, StringWithEscapeSequences)
 {
     Tokenizer tokenizer(R"("hello\nworld\t!")");
-    const Token token = tokenizer.next();
-    EXPECT_EQ(token.type, TOKEN_STRING);
-    EXPECT_EQ(std::get<std::string>(token.value), "hello\nworld\t!");
+    Token token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_STRING);
+    EXPECT_EQ(token.as_string(), "hello\nworld\t!");
 }
 
 TEST_F(TokenizerTest, BooleanParsing)
@@ -64,20 +64,20 @@ TEST_F(TokenizerTest, BooleanParsing)
     Tokenizer tokenizer("true false #t #f");
 
     Token token1 = tokenizer.next();
-    EXPECT_EQ(token1.type, TOKEN_BOOLEAN);
-    EXPECT_TRUE(std::get<bool>(token1.value));
+    EXPECT_EQ(token1.get_type(), TOKEN_BOOLEAN);
+    EXPECT_TRUE(token1.as_boolean());
 
     Token token2 = tokenizer.next();
-    EXPECT_EQ(token2.type, TOKEN_BOOLEAN);
-    EXPECT_FALSE(std::get<bool>(token2.value));
+    EXPECT_EQ(token2.get_type(), TOKEN_BOOLEAN);
+    EXPECT_FALSE(token2.as_boolean());
 
     Token token3 = tokenizer.next();
-    EXPECT_EQ(token3.type, TOKEN_BOOLEAN);
-    EXPECT_TRUE(std::get<bool>(token3.value));
+    EXPECT_EQ(token3.get_type(), TOKEN_BOOLEAN);
+    EXPECT_TRUE(token3.as_boolean());
 
     Token token4 = tokenizer.next();
-    EXPECT_EQ(token4.type, TOKEN_BOOLEAN);
-    EXPECT_FALSE(std::get<bool>(token4.value));
+    EXPECT_EQ(token4.get_type(), TOKEN_BOOLEAN);
+    EXPECT_FALSE(token4.as_boolean());
 }
 
 TEST_F(TokenizerTest, IdentifierParsing)
@@ -85,69 +85,69 @@ TEST_F(TokenizerTest, IdentifierParsing)
     Tokenizer tokenizer("abc define123 lambda? + - */");
 
     Token token1 = tokenizer.next();
-    EXPECT_EQ(token1.type, TOKEN_SYMBOL);
-    EXPECT_EQ(std::get<std::string>(token1.value), "abc");
+    EXPECT_EQ(token1.get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(token1.as_string(), "abc");
 
     Token token2 = tokenizer.next();
-    EXPECT_EQ(token2.type, TOKEN_SYMBOL);
-    EXPECT_EQ(std::get<std::string>(token2.value), "define123");
+    EXPECT_EQ(token2.get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(token2.as_string(), "define123");
 
     Token token3 = tokenizer.next();
-    EXPECT_EQ(token3.type, TOKEN_SYMBOL);
-    EXPECT_EQ(std::get<std::string>(token3.value), "lambda?");
+    EXPECT_EQ(token3.get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(token3.as_string(), "lambda?");
 
     Token token4 = tokenizer.next();
-    EXPECT_EQ(token4.type, TOKEN_SYMBOL);
-    EXPECT_EQ(std::get<std::string>(token4.value), "+");
+    EXPECT_EQ(token4.get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(token4.as_string(), "+");
 
     Token token5 = tokenizer.next();
-    EXPECT_EQ(token5.type, TOKEN_SYMBOL);
-    EXPECT_EQ(std::get<std::string>(token5.value), "-");
+    EXPECT_EQ(token5.get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(token5.as_string(), "-");
 
     Token token6 = tokenizer.next();
-    EXPECT_EQ(token6.type, TOKEN_SYMBOL);
-    EXPECT_EQ(std::get<std::string>(token6.value), "*/");
+    EXPECT_EQ(token6.get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(token6.as_string(), "*/");
 }
 
 TEST_F(TokenizerTest, Parentheses)
 {
     Tokenizer tokenizer("() ( () )");
 
-    EXPECT_EQ(tokenizer.next().type, TOKEN_LPAREN);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_RPAREN);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_LPAREN);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_LPAREN);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_RPAREN);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_RPAREN);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_LPAREN);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_RPAREN);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_LPAREN);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_LPAREN);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_RPAREN);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_RPAREN);
 }
 
 TEST_F(TokenizerTest, SkipWhitespace)
 {
     Tokenizer tokenizer("  123  \n  \"abc\"  \t  true  ");
 
-    EXPECT_EQ(tokenizer.next().type, TOKEN_NUMBER);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_NUMBER);
 
-    EXPECT_EQ(tokenizer.next().type, TOKEN_STRING);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_STRING);
 
-    EXPECT_EQ(tokenizer.next().type, TOKEN_BOOLEAN);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_BOOLEAN);
 }
 
 TEST_F(TokenizerTest, Quote)
 {
     Tokenizer tokenizer("'123 'abc '(a b c)");
 
-    EXPECT_EQ(tokenizer.next().type, TOKEN_QUOTE);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_NUMBER);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_QUOTE);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_NUMBER);
 
-    EXPECT_EQ(tokenizer.next().type, TOKEN_QUOTE);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_SYMBOL);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_QUOTE);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_SYMBOL);
 
-    EXPECT_EQ(tokenizer.next().type, TOKEN_QUOTE);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_LPAREN);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_SYMBOL);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_SYMBOL);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_SYMBOL);
-    EXPECT_EQ(tokenizer.next().type, TOKEN_RPAREN);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_QUOTE);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_LPAREN);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_RPAREN);
 }
 
 TEST_F(TokenizerTest, ComplexExpression)
@@ -172,12 +172,12 @@ TEST_F(TokenizerTest, ComplexExpression)
 
     std::vector<TokenType> actual_types;
     Token current = tokenizer.next();
-    while (current.type != TOKEN_EOI)
+    while (current.get_type() != TOKEN_EOI)
     {
-        actual_types.push_back(current.type);
+        actual_types.push_back(current.get_type());
         current = tokenizer.next();
     }
-    actual_types.push_back(current.type);
+    actual_types.push_back(current.get_type());
 
     EXPECT_EQ(actual_types, expected_types);
 }
@@ -186,11 +186,11 @@ TEST_F(TokenizerTest, EndOfInput)
 {
     Tokenizer tokenizer("");
     const Token token = tokenizer.next();
-    EXPECT_EQ(token.type, TOKEN_EOI);
+    EXPECT_EQ(token.get_type(), TOKEN_EOI);
 
     // 连续调用应该继续返回 EOI
     const Token token2 = tokenizer.next();
-    EXPECT_EQ(token2.type, TOKEN_EOI);
+    EXPECT_EQ(token2.get_type(), TOKEN_EOI);
 }
 
 TEST_F(TokenizerTest, InvalidStringEscape)

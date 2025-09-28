@@ -23,11 +23,11 @@ shared_ptr<Expr> Context::eval(shared_ptr<Expr> expr) {
 
     case SYMBOL:
         {
-            const auto& name = expr->as_string();
+            const auto& name = expr->as_symbol();
             auto var = get(name);
             if (!var)
             {
-                throw GlomError("Undefined variable: " + name);
+                throw GlomError("Undefined variable: " + view_to_string(name));
             }
             return var;
         }
@@ -62,7 +62,7 @@ bool Expr::to_boolean() const
     return as_boolean();
 }
 
-bool Expr::is_empty_list() const
+bool Expr::is_nil() const
 {
     return get_type() == PAIR && as_pair()->empty();
 }
@@ -87,7 +87,7 @@ shared_ptr<Context> Context::eval_apply_context(const shared_ptr<Expr>& proc, sh
         current = std::move(pair->car());
         add(name, eval(std::move(current)));
         index++;
-        if (!pair->cdr())
+        if (pair->cdr()->is_nil())
             break;
         if (pair->cdr()->get_type() != PAIR)
         {
