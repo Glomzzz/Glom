@@ -177,7 +177,10 @@ const string_view& Param::get_name() const
 }
 string Param::to_string() const
 {
-    return view_to_string(name) + "...";
+    string result = view_to_string(name);
+    if (vararg)
+        result = ". " + result;
+    return result;
 }
 
 SymbolPool& SymbolPool::instance() {
