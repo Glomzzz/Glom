@@ -3,14 +3,20 @@
 #include "parser.h"
 #include "expr.h"
 
-class ParserTest : public ::testing::Test {
+class ParserTest : public ::testing::Test
+{
 protected:
-    void SetUp() override {}
-    void TearDown() override {}
+    void SetUp() override
+    {
+    }
+
+    void TearDown() override
+    {
+    }
 };
 
-TEST_F(ParserTest, AtomParsing) {
-
+TEST_F(ParserTest, AtomParsing)
+{
     vector<shared_ptr<Expr>> exprs = parse("123 \"hello\" true abc");
 
     EXPECT_EQ(4, exprs.size());
@@ -28,7 +34,8 @@ TEST_F(ParserTest, AtomParsing) {
     EXPECT_EQ("abc", exprs[3]->as_symbol());
 }
 
-TEST_F(ParserTest, ListParsing) {
+TEST_F(ParserTest, ListParsing)
+{
     vector<shared_ptr<Expr>> exprs = parse("(1 2 3)");
     const shared_ptr<Expr> list = std::move(exprs[0]);
     EXPECT_EQ(PAIR, list->get_type());
@@ -40,7 +47,8 @@ TEST_F(ParserTest, ListParsing) {
     }
 }
 
-TEST_F(ParserTest, QuoteParsing) {
+TEST_F(ParserTest, QuoteParsing)
+{
     vector<shared_ptr<Expr>> exprs = parse("'(1 2 3)");
     const shared_ptr<Expr> list = std::move(exprs[0]);
     EXPECT_EQ(PAIR, list->get_type());
@@ -55,7 +63,8 @@ TEST_F(ParserTest, QuoteParsing) {
     }
 }
 
-TEST_F(ParserTest, NilParsing) {
+TEST_F(ParserTest, NilParsing)
+{
     vector<shared_ptr<Expr>> exprs = parse("'()");
     const shared_ptr<Expr> quoted_nil = std::move(exprs[0]);
     EXPECT_EQ(PAIR, quoted_nil->get_type());
@@ -64,11 +73,11 @@ TEST_F(ParserTest, NilParsing) {
     const auto& nil_nil = quote->cdr()->as_pair();
     EXPECT_EQ(Expr::NIL, nil_nil->car());
     EXPECT_EQ(Expr::NIL, nil_nil->cdr());
-
 }
 
 
-TEST_F(ParserTest, NestedList) {
+TEST_F(ParserTest, NestedList)
+{
     vector<shared_ptr<Expr>> exprs = parse("((1 2) (3 4))");
     const shared_ptr<Expr> list = std::move(exprs[0]);
     EXPECT_EQ(PAIR, list->get_type());
@@ -79,7 +88,8 @@ TEST_F(ParserTest, NestedList) {
     EXPECT_EQ(2, sublist1->cdr()->as_pair()->car()->as_number());
 }
 
-TEST_F(ParserTest, ErrorHandling) {
+TEST_F(ParserTest, ErrorHandling)
+{
     EXPECT_THROW(parse("("), std::runtime_error);
     EXPECT_THROW(parse(")"), std::runtime_error);
     EXPECT_THROW(parse("()"), std::runtime_error);
