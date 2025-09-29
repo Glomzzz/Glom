@@ -80,19 +80,6 @@ shared_ptr<Expr> Context::eval(shared_ptr<Expr> expr) {
 }
 
 
-bool Expr::to_boolean() const
-{
-    if (get_type() != BOOLEAN)
-    {
-        return true;
-    }
-    return as_boolean();
-}
-
-bool Expr::is_nil() const
-{
-    return get_type() == PAIR && as_pair()->empty();
-}
 
 
 shared_ptr<Context> Context::eval_apply_context(const shared_ptr<Expr>& proc, shared_ptr<Context> current_parent, const vector<Param>& params, shared_ptr<Pair>&& args)

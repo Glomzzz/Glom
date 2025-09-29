@@ -165,6 +165,19 @@ shared_ptr<Primitive> Expr::as_primitive() const
     return std::get<shared_ptr<Primitive>>(value);
 }
 
+bool Expr::to_boolean() const
+{
+    if (get_type() != BOOLEAN)
+    {
+        return true;
+    }
+    return as_boolean();
+}
+
+bool Expr::is_nil() const
+{
+    return get_type() == PAIR && as_pair()->empty();
+}
 
 Param::Param(const string_view name, const bool vararg) : name(name), vararg(vararg) {}
 

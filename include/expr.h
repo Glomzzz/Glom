@@ -36,8 +36,6 @@ enum ExprType
 class Context;
 class Lambda;
 
-class PairMaker;
-
 class Pair : public std::enable_shared_from_this<Pair>
 {
     shared_ptr<Expr> data;
