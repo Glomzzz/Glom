@@ -303,6 +303,13 @@ TEST_F(SchemePrimitivesTest, CondCondition)
     EXPECT_DOUBLE_EQ(2.0, result_2_->as_number());
 }
 
+// Apply tests
+TEST_F(SchemePrimitivesTest, Apply)
+{
+    const auto result = eval("(apply + '(1 2 3 4))");
+    EXPECT_EQ(NUMBER, result->get_type());
+    EXPECT_DOUBLE_EQ(10.0, result->as_number());
+}
 // List operations tests
 TEST_F(SchemePrimitivesTest, Cons)
 {

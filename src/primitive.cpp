@@ -106,6 +106,11 @@ void add_list_operations(Context& builder)
     builder.add_primitive("null?", primitives::is_null);
 }
 
+void add_eval_control(Context& builder)
+{
+    builder.add_primitive("apply", primitives::apply);
+}
+
 
 
 shared_ptr<Context> make_root_context()
@@ -121,5 +126,6 @@ shared_ptr<Context> make_root_context()
     add_condition(*context);
     add_io_operations(*context);
     add_list_operations(*context);
+    add_eval_control(*context);
     return context;
 }

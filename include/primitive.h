@@ -41,9 +41,11 @@ namespace primitives_utils
 
 namespace primitives
 {
+    // Eval Control
+    shared_ptr<Expr> apply(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+
     // Quote
     shared_ptr<Expr> quote(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
-
     // Number operations
     shared_ptr<Expr> add(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> sub(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
