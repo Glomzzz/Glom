@@ -35,6 +35,7 @@ TEST_F(ParserTest, ListParsing) {
     int index = 0;
     for (const auto elem : *list->as_pair())
     {
+        if (!elem) break;
         EXPECT_EQ(++index, elem->as_number());
     }
 }
@@ -44,14 +45,28 @@ TEST_F(ParserTest, QuoteParsing) {
     const shared_ptr<Expr> list = std::move(exprs[0]);
     EXPECT_EQ(PAIR, list->get_type());
     const auto& quote = list->as_pair();
-    EXPECT_EQ("quote", quote->car()->as_string());
-    const auto& elements = quote->cdr()->as_pair();
+    EXPECT_EQ("quote", quote->car()->as_symbol());
+    const auto& elements = quote->cdr()->as_pair()->car()->as_pair();
     int index = 0;
     for (const auto elem : *elements)
     {
-        EXPECT_EQ(index++, elem->as_number());
+        if (!elem) break;
+        EXPECT_EQ(++index, elem->as_number());
     }
 }
+
+TEST_F(ParserTest, NilParsing) {
+    vector<shared_ptr<Expr>> exprs = parse("'()");
+    const shared_ptr<Expr> quoted_nil = std::move(exprs[0]);
+    EXPECT_EQ(PAIR, quoted_nil->get_type());
+    const auto& quote = quoted_nil->as_pair();
+    EXPECT_EQ("quote", quote->car()->as_symbol());
+    const auto& nil_nil = quote->cdr()->as_pair();
+    EXPECT_EQ(Expr::NIL, nil_nil->car());
+    EXPECT_EQ(Expr::NIL, nil_nil->cdr());
+
+}
+
 
 TEST_F(ParserTest, NestedList) {
     vector<shared_ptr<Expr>> exprs = parse("((1 2) (3 4))");
@@ -61,10 +76,11 @@ TEST_F(ParserTest, NestedList) {
     EXPECT_EQ(PAIR, elements->car()->get_type());
     const auto& sublist1 = elements->car()->as_pair();
     EXPECT_EQ(1, sublist1->car()->as_number());
-    EXPECT_EQ(2, sublist1->cdr()->as_number());
+    EXPECT_EQ(2, sublist1->cdr()->as_pair()->car()->as_number());
 }
 
 TEST_F(ParserTest, ErrorHandling) {
     EXPECT_THROW(parse("("), std::runtime_error);
     EXPECT_THROW(parse(")"), std::runtime_error);
+    EXPECT_THROW(parse("()"), std::runtime_error);
 }

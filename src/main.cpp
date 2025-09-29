@@ -18,13 +18,20 @@ void repl()
         cout << "glom> ";
         if (!std::getline(cin, input) || input == "exit")
             break;
-        auto exprs = parse(input);
-        if (exprs.empty())
+        try
         {
-            continue;
+            auto exprs = parse(input);
+            if (exprs.empty())
+            {
+                continue;
+            }
+            const auto result = context->eval(exprs);
+            cout << result->to_string() << endl;
         }
-        const auto result = context->eval(exprs);
-        cout << result->to_string() << endl;
+        catch (const std::exception &e)
+        {
+            cout << "Error: " << e.what() << endl;
+        }
     }
 }
 
