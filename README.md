@@ -8,9 +8,9 @@ Glom basically follows the [R5RS Scheme standard](https://docs.racket-lang.org/r
 - Distinction Ideas
   - [x] Tokenizer
   - [x] Parser & Expr
-  - [ ] Context
-  - [ ] Primitive Members
-  - [ ] Evaluation with Immutable Context
+  - [x] Context
+  - [x] Primitive Members
+  - [x] Evaluation with Immutable Context
 - High Distinction Ideas
   - [ ] Evaluation with Mutable Context
   - [ ] Delayed Evaluation

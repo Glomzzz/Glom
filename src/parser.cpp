@@ -4,75 +4,103 @@
 
 #include "parser.h"
 #include "tokenizer.h"
+#include "expr.h"
 
 class Parser
 {
     Tokenizer tokenizer;
 
 public:
-    explicit Parser(const string& input) : tokenizer(input)
-    {
-    }
+    explicit Parser(string input) : tokenizer(std::move(input)){}
 
-    Expr parse_with(Token& token)
+    shared_ptr<Expr> parse_with(Token&& token)
     {
-        switch (token.type)
+        switch (token.get_type())
         {
         case TOKEN_NUMBER:
-            return Expr(std::get<double>(token.value));
+            return Expr::make_number(token.as_number());
         case TOKEN_BOOLEAN:
-            return Expr(std::get<bool>(token.value));
+            {
+                if (token.as_boolean())
+                {
+                    return Expr::TRUE;
+                }
+                return Expr::FALSE;
+            }
         case TOKEN_STRING:
-            return {STRING, std::get<string>(token.value)};
+            return Expr::make_string(std::move(token.as_string()));
         case TOKEN_SYMBOL:
-            return {SYMBOL, std::get<string>(token.value)};
+            return Expr::make_symbol(std::move(token.as_string()));
         case TOKEN_LPAREN:
             {
-                vector<unique_ptr<Expr>> elements;
+                shared_ptr<Pair> pair = nullptr;
+                shared_ptr<Pair> current = nullptr;
                 while (true)
                 {
                     Token nextToken = tokenizer.next();
-                    if (nextToken.type == TOKEN_RPAREN)
+                    if (nextToken.get_type() == TOKEN_RPAREN)
                     {
                         break;
                     }
-                    elements.push_back(std::make_unique<Expr>(parse_with(nextToken)));
+                    auto next_pair = Pair::single(parse_with(std::move(nextToken)));
+                    if (!pair)
+                    {
+                        pair = std::move(next_pair);
+                        current = pair;
+                        continue;
+                    }
+                    current->set_cdr(Expr::make_pair(next_pair));
+                    current = next_pair;
                 }
-                return Expr(elements);
+                if (!pair)
+                    return nullptr;
+                return Expr::make_pair(pair);
             }
         case TOKEN_QUOTE:
             {
-                vector<unique_ptr<Expr>> elements;
-                elements.push_back(std::make_unique<Expr>(Expr{SYMBOL, "quote"}));
-                Token nextToken = tokenizer.next();
-                elements.push_back(std::make_unique<Expr>(parse_with(nextToken)));
-                return Expr(elements);
+                const auto pair = Pair::single(Expr::make_symbol("quote"));
+                auto data = parse_with(std::move(tokenizer.next()));
+                if (!data)
+                    data = Expr::NIL;
+                pair->set_cdr(Expr::make_pair(Pair::single(data)));
+                return Expr::make_pair(pair);
             }
         case TOKEN_RPAREN:
             throw std::runtime_error("Unexpected ')'");
         case TOKEN_EOI:
             throw std::runtime_error("Unexpected end of input");
         default:
-            throw std::runtime_error("Unknown token type of " + std::to_string(token.type));
+            throw std::runtime_error("Unknown token type of " + std::to_string(token.get_type()));
         }
     }
 
-    vector<unique_ptr<Expr>> parse()
+    vector<shared_ptr<Expr>> parse()
     {
-        vector<unique_ptr<Expr>> result;
+        vector<shared_ptr<Expr>> result;
         Token token = tokenizer.next();
-        while (token.type != TOKEN_EOI)
+        while (token.get_type() != TOKEN_EOI)
         {
-            result.push_back(std::make_unique<Expr>(parse_with(token)));
+            auto next = parse_with(std::move(token));
+            if (!next)
+                throw std::runtime_error("invalid syntax ()");
+            result.push_back(next);
             token = tokenizer.next();
         }
         return result;
     }
 };
 
-
-vector<unique_ptr<Expr>> parse(const string& input)
+shared_ptr<Expr> parse_expr(string input)
 {
-    Parser parser(input);
+    auto exprs = parse(std::move(input));
+    if (exprs.size() != 1)
+    {
+        throw std::runtime_error("Expected a single expression, got " + std::to_string(exprs.size()));
+    }
+    return exprs[0];
+}
+vector<shared_ptr<Expr>> parse(string input)
+{
+    Parser parser(std::move(input));
     return parser.parse();
 }

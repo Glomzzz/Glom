@@ -25,7 +25,7 @@ enum TokenType
 };
 
 
-struct Token
+class Token
 {
     TokenType type;
     variant<double, string, bool, monostate> value;
@@ -34,6 +34,20 @@ struct Token
     explicit Token(bool x);
     explicit Token(TokenType token);
     Token(TokenType token, string x);
+public:
+    TokenType get_type() const;
+    double as_number() const;
+    bool as_boolean() const;
+    string& as_string();
+
+    static Token make_number(double x);
+    static Token make_string(string x);
+    static Token make_boolean(bool x);
+    static Token make_symbol(string x);
+    static Token make_left_paren();
+    static Token make_right_paren();
+    static Token make_quote();
+    static Token make_end_of_input();
 };
 
 
@@ -42,12 +56,12 @@ class Tokenizer
     string input;
     size_t index;
 
-    Token nextNumber();
-    Token nextString();
-    Token nextSymbolOrBoolean();
+    Token next_number();
+    Token next_string();
+    Token next_symbol_or_boolean();
 
 public:
-    explicit Tokenizer(const string& input);
+    explicit Tokenizer(string input);
 
     Token next();
 
