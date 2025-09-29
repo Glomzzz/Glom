@@ -2,6 +2,8 @@
 // Created by glom on 9/26/25.
 //
 
+#include <iostream>
+
 #include "context.h"
 #include "expr.h"
 #include "error.h"
@@ -96,34 +98,26 @@ bool Expr::is_nil() const
 shared_ptr<Context> Context::eval_apply_context(const shared_ptr<Expr>& proc, shared_ptr<Context> current_parent, const vector<Param>& params, shared_ptr<Pair>&& args)
 {
     auto context = new_context(std::move(current_parent));
-    shared_ptr<Pair> pair = std::move(args);
-    shared_ptr<Expr> current = nullptr;
+    shared_ptr<Pair> rest = std::move(args);
     size_t index = 0;
-    while (index < params.size())
+    while (index != params.size() && !rest->empty())
     {
         const auto& param = params[index];
         const auto& name = param.get_name();
         if (param.is_vararg())
         {
-            context->add(name, Expr::make_pair(std::move(pair)));
+            context->add(name, Expr::make_pair(std::move(rest)));
             index = params.size();
             break;
         }
-        current = std::move(pair->car());
-        context->add(name, this->eval(std::move(current)));
+        const auto arg = this->eval(rest->car());
+        rest = rest->cdr()->as_pair();
+        context->add(name, arg);
         index++;
-        if (pair->cdr()->is_nil())
-            break;
-        if (pair->cdr()->get_type() != PAIR)
-        {
-            pair = Pair::single(pair->cdr());
-            continue;
-        }
-        pair = pair->cdr()->as_pair();
     }
-    if (index < params.size())
+    if (index != params.size())
     {
-        throw GlomError("Too many arguments provided for " + proc->to_string());
+        throw GlomError("Incorrect number of arguments provided for " + proc->to_string());
     }
 
     return std::move(context);

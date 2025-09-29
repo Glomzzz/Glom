@@ -50,6 +50,7 @@ namespace primitives
     shared_ptr<Expr> mul(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> div(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> remainder(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> power(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     // Number comparisons
     shared_ptr<Expr> eq(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> lt(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);

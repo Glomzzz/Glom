@@ -132,3 +132,19 @@ shared_ptr<Expr> primitives::remainder(const shared_ptr<Context>& context, share
     const double result = std::fmod(dividend, divisor);
     return Expr::make_number(result);
 }
+
+shared_ptr<Expr> primitives::power(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
+{
+    shared_ptr<Expr> base_expr, exp_expr = nullptr;
+    primitives_utils::expect_2_args("expt", args, base_expr, exp_expr);
+    base_expr = context->eval(std::move(base_expr));
+    exp_expr = context->eval(std::move(exp_expr));
+    if (base_expr->get_type() != NUMBER || exp_expr->get_type() != NUMBER)
+    {
+        throw GlomError("Invalid argument expt: both arguments must be numbers");
+    }
+    const double base = base_expr->as_number();
+    const double exp = exp_expr->as_number();
+    const double result = std::pow(base, exp);
+    return Expr::make_number(result);
+}

@@ -44,6 +44,8 @@ void add_number_operations(Context& builder)
     builder.add_primitive("/", primitives::div);
 
     builder.add_primitive("remainder", primitives::remainder);
+
+    builder.add_primitive("expt", primitives::power);
 }
 
 void add_quote_operation(Context& builder)
