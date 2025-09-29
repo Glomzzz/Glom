@@ -53,13 +53,16 @@ public:
                     current = next_pair;
                 }
                 if (!pair)
-                    return Expr::NIL;
+                    return nullptr;
                 return Expr::make_pair(pair);
             }
         case TOKEN_QUOTE:
             {
                 const auto pair = Pair::single(Expr::make_symbol("quote"));
-                pair->set_cdr(parse_with(std::move(tokenizer.next())));
+                auto data = parse_with(std::move(tokenizer.next()));
+                if (!data)
+                    data = Expr::NIL;
+                pair->set_cdr(Expr::make_pair(Pair::single(data)));
                 return Expr::make_pair(pair);
             }
         case TOKEN_RPAREN:
@@ -77,7 +80,10 @@ public:
         Token token = tokenizer.next();
         while (token.get_type() != TOKEN_EOI)
         {
-            result.push_back(parse_with(std::move(token)));
+            auto next = parse_with(std::move(token));
+            if (!next)
+                throw std::runtime_error("invalid syntax ()");
+            result.push_back(next);
             token = tokenizer.next();
         }
         return result;

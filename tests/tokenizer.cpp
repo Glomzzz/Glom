@@ -134,7 +134,7 @@ TEST_F(TokenizerTest, SkipWhitespace)
 
 TEST_F(TokenizerTest, Quote)
 {
-    Tokenizer tokenizer("'123 'abc '(a b c)");
+    Tokenizer tokenizer("'123 'abc '(a b c) '()");
 
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_QUOTE);
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_NUMBER);
@@ -147,6 +147,10 @@ TEST_F(TokenizerTest, Quote)
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_SYMBOL);
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_SYMBOL);
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_SYMBOL);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_RPAREN);
+
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_QUOTE);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_LPAREN);
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_RPAREN);
 }
 

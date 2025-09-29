@@ -45,7 +45,32 @@ shared_ptr<Expr> Context::eval(shared_ptr<Expr> expr) {
             {
                 args = Pair::single(std::move(rest));
             }
-            return apply(std::move(proc), std::move(args));
+
+            switch (proc->get_type())
+            {
+            case PRIMITIVE:
+                {
+                    const auto primitive = proc->as_primitive();
+                    return (*primitive)(shared_from_this(),std::move(args));
+                }
+            case LAMBDA:
+                {
+                    const auto lambda = proc->as_lambda();
+                    const auto& params = lambda->get_params();
+                    const auto& body = lambda->get_body();
+                    shared_ptr<Context> apply_context = nullptr;
+                    if (params.empty())
+                    {
+                        apply_context = lambda->get_context();
+                    } else
+                    {
+                        apply_context = eval_apply_context(proc, lambda->get_context(), params, std::move(args));
+                    }
+                    return apply_context->eval(body);
+                }
+            default:
+                throw GlomError( proc->to_string() + " is not a procedure: " + expr->to_string());
+            }
         }
     default:
         throw GlomError("Unsupported expression type");
@@ -80,12 +105,12 @@ shared_ptr<Context> Context::eval_apply_context(const shared_ptr<Expr>& proc, sh
         const auto& name = param.get_name();
         if (param.is_vararg())
         {
-            add(name, Expr::make_pair(std::move(pair)));
+            context->add(name, Expr::make_pair(std::move(pair)));
             index = params.size();
             break;
         }
         current = std::move(pair->car());
-        add(name, eval(std::move(current)));
+        context->add(name, this->eval(std::move(current)));
         index++;
         if (pair->cdr()->is_nil())
             break;
@@ -102,35 +127,6 @@ shared_ptr<Context> Context::eval_apply_context(const shared_ptr<Expr>& proc, sh
     }
 
     return std::move(context);
-}
-
-shared_ptr<Expr> Context::apply(shared_ptr<Expr>&& proc, shared_ptr<Pair>&& args)
-{
-    switch (proc->get_type())
-    {
-        case PRIMITIVE:
-            {
-                const auto primitive = proc->as_primitive();
-                return (*primitive)(shared_from_this(),std::move(args));
-            }
-        case LAMBDA:
-            {
-                const auto lambda = proc->as_lambda();
-                const auto& params = lambda->get_params();
-                const auto& body = lambda->get_body();
-                shared_ptr<Context> apply_context = nullptr;
-                if (params.empty())
-                {
-                    apply_context = lambda->get_context();
-                } else
-                {
-                    apply_context = eval_apply_context(proc, lambda->get_context(), params, std::move(args));
-                }
-                return apply_context->eval(body);
-            }
-        default:
-            throw GlomError("First element in list is not a function");
-    }
 }
 shared_ptr<Expr> Context::eval(const shared_ptr<Pair>& exprs)
 {

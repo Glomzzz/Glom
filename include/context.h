@@ -46,8 +46,6 @@ public:
 
     shared_ptr<Context> eval_apply_context(const shared_ptr<Expr>& proc, shared_ptr<Context> current_parent,
                                                   const vector<Param>& params, shared_ptr<Pair>&& args);
-    shared_ptr<Expr> apply(shared_ptr<Expr>&& proc,
-                           shared_ptr<Pair>&& args);
 
     string to_string() const;
 
