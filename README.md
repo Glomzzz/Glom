@@ -11,7 +11,9 @@ Glom basically follows the [R5RS Scheme standard](https://docs.racket-lang.org/r
   - [x] Context
   - [x] Primitive Members
   - [x] Evaluation with Immutable Context
+  - [ ] Tail Call Optimization
 - High Distinction Ideas
+  - [x] int64 & bigint & rational & real(long double)
   - [ ] Evaluation with Mutable Context
   - [ ] Delayed Evaluation
   - [ ] Module

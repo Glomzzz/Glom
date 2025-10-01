@@ -17,8 +17,15 @@ public:
     {
         switch (token.get_type())
         {
-        case TOKEN_NUMBER:
-            return Expr::make_number(token.as_number());
+        case TOKEN_NUMBER_INT:
+            return Expr::make_number_int(token.as_number_int());
+        case TOKEN_NUMBER_RAT:
+        {
+            auto rat = token.as_number_rat();
+            return Expr::make_number_exact(std::move(rat));
+        }
+        case TOKEN_NUMBER_REAL:
+            return Expr::make_number_real(token.as_number_real());
         case TOKEN_BOOLEAN:
             {
                 if (token.as_boolean())
@@ -28,7 +35,7 @@ public:
                 return Expr::FALSE;
             }
         case TOKEN_STRING:
-            return Expr::make_string(std::move(token.as_string()));
+            return Expr::make_string(std::make_unique<string>(token.as_string()));
         case TOKEN_SYMBOL:
             return Expr::make_symbol(std::move(token.as_string()));
         case TOKEN_LPAREN:

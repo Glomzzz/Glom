@@ -11,8 +11,7 @@ shared_ptr<Expr> primitives::cond_if(const shared_ptr<Context>& context, shared_
 {
     shared_ptr<Expr> cond, then, otherwise = nullptr;
     primitives_utils::expect_2_or_3_args("if", args, cond, then, otherwise);
-    const auto evaluated_cond = context->eval(cond);
-    if (evaluated_cond->to_boolean())
+    if (const auto evaluated_cond = context->eval(cond); evaluated_cond->to_boolean())
     {
         return context->eval(then);
     }
@@ -28,7 +27,7 @@ shared_ptr<Expr> primitives::cond(const shared_ptr<Context>& context, shared_ptr
     while (*current != nullptr)
     {
         const auto clause = std::move(*current++);
-        if (clause->get_type() != PAIR)
+        if (!clause->is_pair())
         {
             throw GlomError("Invalid clause in cond: " + clause->to_string());
         }
@@ -40,7 +39,7 @@ shared_ptr<Expr> primitives::cond(const shared_ptr<Context>& context, shared_ptr
         const auto condition = std::move(clause_pair->car());
         bool test = false;
         shared_ptr<Expr> evaluated_condition = nullptr;
-        if (condition->get_type() == SYMBOL && condition->as_symbol() == "else")
+        if (condition->is_symbol() && condition->as_symbol() == "else")
         {
             if (*current != nullptr)
             {
@@ -62,7 +61,7 @@ shared_ptr<Expr> primitives::cond(const shared_ptr<Context>& context, shared_ptr
             return evaluated_condition;
         }
         auto body_expr = clause_pair->cdr();
-        if (body_expr->get_type() == PAIR)
+        if (body_expr->is_pair())
         {
             const auto body = body_expr->as_pair();
             return context->eval(body);

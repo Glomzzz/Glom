@@ -4,6 +4,8 @@
 #include <memory>
 
 #include "expr.h"
+
+#include "error.h"
 #include "primitive.h"
 
 using std::string;
@@ -35,8 +37,7 @@ shared_ptr<Expr> Pair::iterator::operator*() const
 Pair::iterator& Pair::iterator::operator++()
 {
     if (current && current->cdr()) {
-        auto next_expr = current->cdr();
-        if (next_expr->get_type() == PAIR) {
+        if (auto next_expr = current->cdr(); next_expr->is_pair()) {
             current = next_expr->as_pair();
         } else {
             current = single(std::move(next_expr));
@@ -98,7 +99,7 @@ string Pair::to_string() const
     result += current->to_string();
     current = next;
 
-    while (current && current->get_type() == PAIR)
+    while (current && current->is_pair())
     {
         const auto pair = current->as_pair();
         if (pair->empty())
@@ -117,35 +118,122 @@ string Pair::to_string() const
 }
 
 
-Expr::Expr(const ExprType type):type(type) {}
-Expr::Expr(const double v) :type(NUMBER), value(v) {}
-Expr::Expr(const bool v) : type(BOOLEAN),value(v) {}
+Expr::Expr() : value(monostate{}) {}
+Expr::Expr(const bool v) : value(v) {}
+Expr::Expr(integer v) : value(std::move(v)) {}
+Expr::Expr(const real v) : value(v) {}
+Expr::Expr(rational v) : value(std::make_unique<rational>(std::move(v))) {}
 
-Expr::Expr(shared_ptr<Pair>&& v) :type(PAIR), value(std::move(v)) {}
-Expr::Expr(shared_ptr<Lambda>&& v) :type(LAMBDA), value(std::move(v)) {}
-Expr::Expr(shared_ptr<Primitive>&& v) :type(PRIMITIVE), value(std::move(v)) {}
-
-Expr::Expr(string&& v) :type(STRING), value(std::move(v)) {}
-Expr::Expr(const string_view v): type(SYMBOL), value(v) {}
-
-
+Expr::Expr(shared_ptr<Pair>&& v) : value(std::move(v)) {}
+Expr::Expr(shared_ptr<Lambda>&& v) : value(std::move(v)) {}
+Expr::Expr(shared_ptr<Primitive>&& v) : value(std::move(v)) {}
+Expr::Expr(std::unique_ptr<string>&& v) : value(std::move(v)) {}
+Expr::Expr(const string_view v): value(v) {}
 
 
 ExprType Expr::get_type() const
 {
-    return type;
+    return value.index();
 }
+bool Expr::is_nothing() const
+{
+    return value.index() == VOID;
+}
+bool Expr::is_number() const
+{
+    const auto index = value.index();
+    return index >= NUMBER_INT && index <= NUMBER_REAL;
+}
+bool Expr::is_number_int() const
+{
+    return value.index() == NUMBER_INT;
+}
+bool Expr::is_number_rat() const
+{
+    return value.index() == NUMBER_RAT;
+}
+bool Expr::is_number_real() const
+{
+    return value.index() == NUMBER_REAL;
+}
+bool Expr::is_string() const
+{
+    return value.index() == STRING;
+}
+bool Expr::is_symbol() const
+{
+    return value.index() == SYMBOL;
+}
+bool Expr::is_boolean() const
+{
+    return value.index() == BOOLEAN;
+}
+bool Expr::is_pair() const
+{
+    return value.index() == PAIR;
+}
+bool Expr::is_lambda() const
+{
+    return value.index() == LAMBDA;
+}
+bool Expr::is_primitive() const
+{
+    return value.index() == PRIMITIVE;
+}
+
 bool Expr::as_boolean() const
 {
     return std::get<bool>(value);
 }
-double Expr::as_number() const
+integer Expr::as_number_int() const
 {
-    return std::get<double>(value);
+    return std::get<integer>(value);
 }
+const rational& Expr::as_number_rat() const
+{
+    return *std::get<unique_ptr<rational>>(value);
+}
+
+real Expr::as_number_real() const
+{
+    return std::get<real>(value);
+}
+real Expr::to_number_real() const
+{
+    switch (value.index())
+    {
+        case NUMBER_INT:
+            return as_number_int().to_real();
+        case NUMBER_RAT:
+        {
+            auto& [num, den] = as_number_rat();
+            return num.to_real() / den.to_real();
+        }
+        case NUMBER_REAL:
+            return as_number_real();
+        default:
+            throw GlomError("Cannot convert to real: " + to_string());
+    }
+}
+
+rational Expr::to_number_rat() const
+{
+    switch (value.index())
+    {
+        case NUMBER_INT:
+            return as_number_int().to_rational();
+        case NUMBER_RAT:
+            return as_number_rat();
+        case NUMBER_REAL:
+            throw GlomError("Cannot convert real to rational: " + to_string());
+        default:
+            throw GlomError("Cannot convert to rational: " + to_string());
+    }
+}
+
 const string& Expr::as_string() const
 {
-    return std::get<string>(value);
+    return *std::get<unique_ptr<string>>(value);
 }
 const string_view& Expr::as_symbol() const
 {
@@ -165,6 +253,19 @@ shared_ptr<Primitive> Expr::as_primitive() const
     return std::get<shared_ptr<Primitive>>(value);
 }
 
+bool Expr::to_boolean() const
+{
+    if (!is_boolean())
+    {
+        return true;
+    }
+    return as_boolean();
+}
+
+bool Expr::is_nil() const
+{
+    return is_pair() && as_pair()->empty();
+}
 
 Param::Param(const string_view name, const bool vararg) : name(name), vararg(vararg) {}
 
@@ -177,7 +278,10 @@ const string_view& Param::get_name() const
 }
 string Param::to_string() const
 {
-    return view_to_string(name) + "...";
+    string result = view_to_string(name);
+    if (vararg)
+        result = ". " + result;
+    return result;
 }
 
 SymbolPool& SymbolPool::instance() {
@@ -207,24 +311,42 @@ string view_to_string(const string_view& view) {
 
 const std::shared_ptr<Expr> Expr::TRUE = std::make_shared<Expr>(true);
 const std::shared_ptr<Expr> Expr::FALSE = std::make_shared<Expr>(false);
-const std::shared_ptr<Expr> Expr::NOTHING = std::make_shared<Expr>(VOID);
+const std::shared_ptr<Expr> Expr::NOTHING = std::make_shared<Expr>();
 const std::shared_ptr<Expr> Expr::NIL = make_pair(Pair::EMPTY);
 
-shared_ptr<Expr> Expr::make_number(const double v)
+shared_ptr<Expr> Expr::make_number_int(integer v)
 {
-    return std::make_shared<Expr>(v);
+    return std::make_shared<Expr>(Expr(std::move(v)));
+}
+
+shared_ptr<Expr> Expr::make_number_rat(rational rat)
+{
+    return std::make_shared<Expr>(Expr(std::move(rat)));
+}
+
+shared_ptr<Expr> Expr::make_number_exact(rational rat)
+{
+    if (rat.is_integer())
+    {
+        return make_number_int(std::move(rat.num));
+    }
+    return std::make_shared<Expr>(Expr(std::move(rat)));
+}
+shared_ptr<Expr> Expr::make_number_real(const real v)
+{
+    return std::make_shared<Expr>(Expr(v));
 }
 shared_ptr<Expr> Expr::make_boolean(const bool cond)
 {
     return cond ? TRUE : FALSE;
 }
-shared_ptr<Expr> Expr::make_string(string v)
+shared_ptr<Expr> Expr::make_string(unique_ptr<string> v)
 {
     return std::make_shared<Expr>(Expr(std::move(v)));
 }
 shared_ptr<Expr> Expr::make_symbol(string v)
 {
-    auto str_view = SymbolPool::instance().intern(std::move(v));
+    const auto str_view = SymbolPool::instance().intern(std::move(v));
     return std::make_shared<Expr>(Expr(str_view));
 }
 shared_ptr<Expr> Expr::make_lambda(shared_ptr<Lambda> v)
@@ -281,10 +403,16 @@ string Lambda::to_string() const
 
 string Expr::to_string() const
 {
-    switch (type)
+    switch (value.index())
     {
-        case NUMBER:
-            return std::to_string(as_number());
+        case NUMBER_INT:
+            return as_number_int().to_decimal_string();
+        case NUMBER_RAT:
+        {
+            return as_number_rat().to_rational_string();
+        }
+        case NUMBER_REAL:
+            return std::to_string(as_number_real());
         case STRING:
             return "\"" + as_string() + "\"";
         case BOOLEAN:

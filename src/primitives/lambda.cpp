@@ -23,11 +23,11 @@ shared_ptr<Expr> primitives::lambda(shared_ptr<Context> context, const shared_pt
 
     vector<Param> params;
 
-    if (params_expr->get_type() == SYMBOL)
+    if (params_expr->is_symbol())
     {
         params.emplace_back(params_expr->as_symbol(), true);
     }
-    else if (params_expr->get_type() == PAIR)
+    else if (params_expr->is_pair())
     {
         const auto& param_list = params_expr->as_pair();
 
@@ -40,7 +40,7 @@ shared_ptr<Expr> primitives::lambda(shared_ptr<Context> context, const shared_pt
             {
                 throw GlomError("Invalid parameters in lambda: more than one item found after dot (.)");
             }
-            if (param->get_type() != SYMBOL)
+            if (!param->is_symbol())
             {
                 throw GlomError("Invalid parameter in lambda: expected symbol, got " + param->to_string());
             }

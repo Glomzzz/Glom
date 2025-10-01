@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <variant>
+#include "type.h"
 
 using std::string;
 using std::variant;
@@ -14,10 +15,12 @@ using std::monostate;
 
 enum TokenType
 {
-    TOKEN_NUMBER,
+    TOKEN_NUMBER_INT,
+    TOKEN_NUMBER_RAT,
+    TOKEN_NUMBER_REAL,
     TOKEN_STRING,
-    TOKEN_BOOLEAN,
     TOKEN_SYMBOL,
+    TOKEN_BOOLEAN,
     TOKEN_LPAREN,
     TOKEN_RPAREN,
     TOKEN_QUOTE,
@@ -28,19 +31,25 @@ enum TokenType
 class Token
 {
     TokenType type;
-    variant<double, string, bool, monostate> value;
+    variant<monostate, bool, integer, rational, real, string> value;
 
-    explicit Token(double x);
+    explicit Token(integer x);
+    explicit Token(rational x);
+    explicit Token(real x);
     explicit Token(bool x);
     explicit Token(TokenType token);
     Token(TokenType token, string x);
 public:
-    TokenType get_type() const;
-    double as_number() const;
-    bool as_boolean() const;
+    [[nodiscard]] TokenType get_type() const;
+    [[nodiscard]] integer as_number_int() const;
+    [[nodiscard]] rational as_number_rat() const;
+    [[nodiscard]] real as_number_real() const;
+    [[nodiscard]] bool as_boolean() const;
     string& as_string();
 
-    static Token make_number(double x);
+    static Token make_number_int(integer x);
+    static Token make_number_rat(rational x);
+    static Token make_number_real(real x);
     static Token make_string(string x);
     static Token make_boolean(bool x);
     static Token make_symbol(string x);

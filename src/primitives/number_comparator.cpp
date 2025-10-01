@@ -6,6 +6,76 @@
 #include "context.h"
 #include "primitive.h"
 
+bool primitives_utils::generic_num_eq(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
+{
+    coerce_number(a,b);
+    if (a->is_number_real())
+    {
+        return a->as_number_real() == b->as_number_real();
+    }
+    if (a->is_number_rat())
+    {
+        return a->as_number_rat() == b->as_number_rat();
+    }
+    return a->as_number_int() == b->as_number_int();
+}
+
+bool generic_lt(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
+{
+    primitives_utils::coerce_number(a,b);
+    if (a->is_number_real())
+    {
+        return a->as_number_real() < b->as_number_real();
+    }
+    if (a->is_number_rat())
+    {
+        return a->as_number_rat() < b->as_number_rat();
+    }
+    return a->as_number_int() < b->as_number_int();
+}
+
+bool generic_gt(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
+{
+    primitives_utils::coerce_number(a,b);
+    if (a->is_number_real())
+    {
+        return a->as_number_real() > b->as_number_real();
+    }
+    if (a->is_number_rat())
+    {
+        return a->as_number_rat() > b->as_number_rat();
+    }
+    return a->as_number_int() > b->as_number_int();
+}
+
+bool generic_le(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
+{
+    primitives_utils::coerce_number(a,b);
+    if (a->is_number_real())
+    {
+        return a->as_number_real() <= b->as_number_real();
+    }
+    if (a->is_number_rat())
+    {
+        return a->as_number_rat() <= b->as_number_rat();
+    }
+    return a->as_number_int() <= b->as_number_int();
+}
+
+bool generic_ge(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
+{
+    primitives_utils::coerce_number(a,b);
+    if (a->is_number_real())
+    {
+        return a->as_number_real() >= b->as_number_real();
+    }
+    if (a->is_number_rat())
+    {
+        return a->as_number_rat() >= b->as_number_rat();
+    }
+    return a->as_number_int() >= b->as_number_int();
+}
+
 shared_ptr<Expr> primitives::eq(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
 {
     if (args->empty() || args->cdr()->is_nil())
@@ -13,21 +83,21 @@ shared_ptr<Expr> primitives::eq(const shared_ptr<Context>& context, shared_ptr<P
         throw GlomError("Invalid number of arguments =: at least two arguments required");
     }
     const auto first_expr = context->eval(std::move(args->car()));
-    if (first_expr->get_type() != NUMBER)
+    if (!first_expr->is_number())
     {
         throw GlomError("Invalid argument =: " + first_expr->to_string() + " is not a number");
     }
     const auto rest = args->cdr()->as_pair();
-    const auto first = first_expr->as_number();
+    auto first = first_expr;
     for (const auto it: *rest)
     {
         if (!it) break;
-        const auto next_expr = context->eval(it);
-        if (next_expr->get_type() != NUMBER)
+        auto next_expr = context->eval(it);
+        if (!next_expr->is_number())
         {
             throw GlomError("Invalid argument =: " + next_expr->to_string() + " is not a number");
         }
-        if (next_expr->as_number() != first)
+        if (!primitives_utils::generic_num_eq(first, next_expr))
         {
             return Expr::FALSE;
         }
@@ -41,26 +111,25 @@ shared_ptr<Expr> primitives::lt(const shared_ptr<Context>& context, shared_ptr<P
         throw GlomError("Invalid number of arguments <: at least two arguments required");
     }
     const auto first = context->eval(std::move(args->car()));
-    if (first->get_type() != NUMBER)
+    if (!first->is_number())
     {
         throw GlomError("Invalid argument <: " + first->to_string() + " is not a number");
     }
     const auto rest = args->cdr()->as_pair();
-    double last = first->as_number();
+    auto last = first;
     for (const auto it: *rest)
     {
         if (!it) break;
-        const auto next_expr = context->eval(it);
-        if (next_expr->get_type() != NUMBER)
+        auto next_expr = context->eval(it);
+        if (!next_expr->is_number())
         {
             throw GlomError("Invalid argument <: " + next_expr->to_string() + " is not a number");
         }
-        const double next = next_expr->as_number();
-        if (last >= next)
+        if (generic_ge(last, next_expr))
         {
             return Expr::FALSE;
         }
-        last = next;
+        last = next_expr;
     }
     return Expr::TRUE;
 }
@@ -71,27 +140,26 @@ shared_ptr<Expr> primitives::gt(const shared_ptr<Context>& context, shared_ptr<P
         throw GlomError("Invalid number of arguments >: at least two arguments required");
     }
     const auto first = context->eval(std::move(args->car()));
-    if (first->get_type() != NUMBER)
+    if (!first->is_number())
     {
         throw GlomError("Invalid argument >: " + first->to_string() + " is not a number");
     }
     const auto rest = args->cdr()->as_pair();
-    double last = first->as_number();
+    auto last = first;
     for (const auto it: *rest)
     {
         if (!it) break;
-        const auto next_expr = context->eval(it);
+         auto next_expr = context->eval(it);
 
-        if (next_expr->get_type() != NUMBER)
+        if (!next_expr->is_number())
         {
             throw GlomError("Invalid argument >: " + next_expr->to_string() + " is not a number");
         }
-        const double next = next_expr->as_number();
-        if (last <= next)
+        if (generic_le(last, next_expr))
         {
             return Expr::FALSE;
         }
-        last = next;
+        last = next_expr;
     }
     return Expr::TRUE;
 }
@@ -103,27 +171,26 @@ shared_ptr<Expr> primitives::le(const shared_ptr<Context>& context, shared_ptr<P
         throw GlomError("Invalid number of arguments <=: at least two arguments required");
     }
     const auto first = context->eval(std::move(args->car()));
-    if (first->get_type() != NUMBER)
+    if (!first->is_number())
     {
         throw GlomError("Invalid argument <=: " + first->to_string() + " is not a number");
     }
     const auto rest = args->cdr()->as_pair();
-    double last = first->as_number();
+    auto last = first;
     for (const auto it: *rest)
     {
         if (!it) break;
-        const auto next_expr = context->eval(it);
+        auto next_expr = context->eval(it);
 
-        if (next_expr->get_type() != NUMBER)
+        if (!next_expr->is_number())
         {
             throw GlomError("Invalid argument <=: " + next_expr->to_string() + " is not a number");
         }
-        const double next = next_expr->as_number();
-        if (last > next)
+        if (generic_gt(last, next_expr))
         {
             return Expr::FALSE;
         }
-        last = next;
+        last = next_expr;
     }
     return Expr::TRUE;
 }
@@ -134,27 +201,26 @@ shared_ptr<Expr> primitives::ge(const shared_ptr<Context>& context, shared_ptr<P
         throw GlomError("Invalid number of arguments >=: at least two arguments required");
     }
     const auto first = context->eval(std::move(args->car()));
-    if (first->get_type() != NUMBER)
+    if (!first->is_number())
     {
         throw GlomError("Invalid argument >=: " + first->to_string() + " is not a number");
     }
     const auto rest = args->cdr()->as_pair();
-    double last = first->as_number();
+    auto last = first;
     for (const auto it: *rest)
     {
         if (!it) break;
-        const auto next_expr = context->eval(it);
+        auto next_expr = context->eval(it);
 
-        if (next_expr->get_type() != NUMBER)
+        if (!next_expr->is_number())
         {
             throw GlomError("Invalid argument >=: " + next_expr->to_string() + " is not a number");
         }
-        const double next = next_expr->as_number();
-        if (last < next)
+        if (generic_lt(last, next_expr))
         {
             return Expr::FALSE;
         }
-        last = next;
+        last = next_expr;
     }
     return Expr::TRUE;
 }
