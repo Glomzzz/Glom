@@ -39,6 +39,7 @@ void add_number_operations(Context& builder)
     builder.add_primitive("*", primitives::mul);
     builder.add_primitive("-", primitives::sub);
     builder.add_primitive("/", primitives::div);
+    builder.add_primitive("modulo", primitives::modulo);
     builder.add_primitive("remainder", primitives::remainder);
     builder.add_primitive("expt", primitives::power);
 }

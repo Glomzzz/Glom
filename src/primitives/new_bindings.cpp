@@ -2,8 +2,6 @@
 // Created by glom on 9/27/25.
 //
 
-#include <iostream>
-#include <optional>
 
 #include "error.h"
 #include "context.h"
@@ -24,7 +22,7 @@ shared_ptr<Expr> primitives::define(const shared_ptr<Context>& context, shared_p
         string_view name;
         shared_ptr<Expr> value;
 
-        if (name_params_expr->get_type() == SYMBOL)
+        if (name_params_expr->is_symbol())
         {
             name = name_params_expr->as_symbol();
             auto value_expr = std::move(current->car());
@@ -35,7 +33,7 @@ shared_ptr<Expr> primitives::define(const shared_ptr<Context>& context, shared_p
                 throw GlomError("Invalid body define");
             }
         }
-        else if (name_params_expr->get_type() == PAIR)
+        else if (name_params_expr->is_pair())
         {
             const auto terms = name_params_expr->as_pair();
             if (terms->empty())
@@ -44,14 +42,14 @@ shared_ptr<Expr> primitives::define(const shared_ptr<Context>& context, shared_p
             }
             const auto first = std::move(terms->car());
             auto rest = terms->cdr()->as_pair();
-            if (first->get_type() != SYMBOL)
+            if (!first->is_symbol())
             {
                 throw GlomError("Invalid define, name must be symbol");
             }
             name = first->as_symbol();
 
             shared_ptr<Expr> lambda_params_expr = nullptr;
-            if (const auto second = rest->car(); second && second->get_type() == SYMBOL && second->as_symbol() == ".")
+            if (const auto second = rest->car(); second && second->is_symbol() && second->as_symbol() == ".")
             {
                 rest = rest->cdr()->as_pair();
                 if (rest->empty())
@@ -91,16 +89,17 @@ shared_ptr<Expr> primitives::let(const shared_ptr<Context>& context, shared_ptr<
     current = current->cdr()->as_pair();
     shared_ptr<Expr> name = nullptr;
     shared_ptr<Expr> bindings_expr = nullptr;
-    if (first->get_type() == SYMBOL)
+    if (first->is_symbol())
     {
         name = first;
         bindings_expr = current->car();
+        current = current->cdr()->as_pair();
     }
     else
     {
         bindings_expr = first;
     }
-    if (bindings_expr->get_type() != PAIR)
+    if (!bindings_expr->is_pair())
     {
         throw GlomError("Invalid bindings in let");
     }
@@ -110,7 +109,7 @@ shared_ptr<Expr> primitives::let(const shared_ptr<Context>& context, shared_ptr<
     for (shared_ptr<Pair> lambda_args_tail = nullptr; const auto& binding_expr : *bindings_list)
     {
         if (!binding_expr) break;
-        if (binding_expr->get_type() != PAIR)
+        if (!binding_expr->is_pair())
         {
             throw GlomError("Invalid binding in let");
         }
@@ -121,7 +120,7 @@ shared_ptr<Expr> primitives::let(const shared_ptr<Context>& context, shared_ptr<
         }
         const auto name_expr = binding->car();
         const auto rest = binding->cdr()->as_pair();
-        if (name_expr->get_type() != SYMBOL)
+        if (!name_expr->is_symbol())
         {
             throw GlomError("Invalid binding name in let, must be symbol");
         }
@@ -145,7 +144,7 @@ shared_ptr<Expr> primitives::let(const shared_ptr<Context>& context, shared_ptr<
             lambda_args_tail = new_tail;
         }
     }
-    auto body = current->cdr()->as_pair();
+    auto body = current;
     shared_ptr<Context> lambda_context = Context::new_context(context);
     auto lambda = Expr::make_lambda(make_shared<Lambda>(std::move(lambda_params), std::move(body), lambda_context));
     if (name)

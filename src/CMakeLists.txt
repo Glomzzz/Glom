@@ -8,6 +8,8 @@ add_library(glom
         eval.cpp
         primitive.cpp
         error.cpp
+        bigint.cpp
+        number.cpp
         ${PRIMITIVE_SOURCES}
 )
 add_executable(glom_exe main.cpp)

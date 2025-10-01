@@ -17,21 +17,32 @@ protected:
 
 TEST_F(ParserTest, AtomParsing)
 {
-    vector<shared_ptr<Expr>> exprs = parse("123 \"hello\" true abc");
+    const vector<shared_ptr<Expr>> exprs = parse("123 12312312312321312312312312412412412412412412412412 123/124 1748297128947981274891274.0 \"hello\" true abc");
 
-    EXPECT_EQ(4, exprs.size());
+    EXPECT_EQ(7, exprs.size());
 
-    EXPECT_EQ(NUMBER, exprs[0]->get_type());
-    EXPECT_EQ(123, exprs[0]->as_number());
+    EXPECT_EQ(NUMBER_INT, exprs[0]->get_type());
+    EXPECT_EQ(integer(123), exprs[0]->as_number_int());
 
-    EXPECT_EQ(STRING, exprs[1]->get_type());
-    EXPECT_EQ("hello", exprs[1]->as_string());
+    EXPECT_EQ(NUMBER_INT, exprs[1]->get_type());
+    EXPECT_EQ(integer("12312312312321312312312312412412412412412412412412"), exprs[1]->as_number_int());
 
-    EXPECT_EQ(BOOLEAN, exprs[2]->get_type());
-    EXPECT_EQ(true, exprs[2]->as_boolean());
 
-    EXPECT_EQ(SYMBOL, exprs[3]->get_type());
-    EXPECT_EQ("abc", exprs[3]->as_symbol());
+    EXPECT_EQ(NUMBER_RAT, exprs[2]->get_type());
+    EXPECT_EQ(rational(integer(123),integer(124)), exprs[2]->as_number_rat());
+
+    EXPECT_EQ(NUMBER_REAL, exprs[3]->get_type());
+    EXPECT_EQ(from_string("1748297128947981274891274.0"), exprs[3]->as_number_real());
+
+    EXPECT_EQ(STRING, exprs[4]->get_type());
+    EXPECT_EQ("hello", exprs[4]->as_string());
+
+    EXPECT_EQ(BOOLEAN, exprs[5]->get_type());
+    EXPECT_EQ(true, exprs[5]->as_boolean());
+
+    EXPECT_EQ(SYMBOL, exprs[6]->get_type());
+    EXPECT_EQ("abc", exprs[6]->as_symbol());
+
 }
 
 TEST_F(ParserTest, ListParsing)
@@ -43,7 +54,7 @@ TEST_F(ParserTest, ListParsing)
     for (const auto elem : *list->as_pair())
     {
         if (!elem) break;
-        EXPECT_EQ(++index, elem->as_number());
+        EXPECT_EQ(++index, elem->as_number_int().as_int64());
     }
 }
 
@@ -59,7 +70,7 @@ TEST_F(ParserTest, QuoteParsing)
     for (const auto elem : *elements)
     {
         if (!elem) break;
-        EXPECT_EQ(++index, elem->as_number());
+        EXPECT_EQ(++index, elem->as_number_int().as_int64());
     }
 }
 
@@ -84,8 +95,8 @@ TEST_F(ParserTest, NestedList)
     const auto& elements = list->as_pair();
     EXPECT_EQ(PAIR, elements->car()->get_type());
     const auto& sublist1 = elements->car()->as_pair();
-    EXPECT_EQ(1, sublist1->car()->as_number());
-    EXPECT_EQ(2, sublist1->cdr()->as_pair()->car()->as_number());
+    EXPECT_EQ(1, sublist1->car()->as_number_int().as_int64());
+    EXPECT_EQ(2, sublist1->cdr()->as_pair()->car()->as_number_int().as_int64());
 }
 
 TEST_F(ParserTest, ErrorHandling)

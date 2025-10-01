@@ -19,28 +19,67 @@ protected:
     }
 };
 
-TEST_F(TokenizerTest, BasicNumberParsing)
+TEST_F(TokenizerTest, NumberIntegerParsing)
 {
-    Tokenizer tokenizer("123");
-    const Token token = tokenizer.next();
-    EXPECT_EQ(token.get_type(), TOKEN_NUMBER);
-    EXPECT_DOUBLE_EQ(token.as_number(), 123.0);
+    Tokenizer tokenizer("123 -123 +456 9223372036854775807 7894138974138974317894318794132879431897431789431789");
+    Token token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_INT);
+    EXPECT_EQ(token.as_number_int(), integer(123));
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_INT);
+    EXPECT_EQ(token.as_number_int(), integer(-123));
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_INT);
+    EXPECT_EQ(token.as_number_int(), integer(456));
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_INT);
+    EXPECT_EQ(token.as_number_int(), integer(9223372036854775807));
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_INT);
+    EXPECT_EQ(token.as_number_int(), integer("7894138974138974317894318794132879431897431789431789"));
 }
 
-TEST_F(TokenizerTest, DecimalNumberParsing)
+TEST_F(TokenizerTest, NumberRationalParsing)
 {
-    Tokenizer tokenizer("45.67");
-    const Token token = tokenizer.next();
-    EXPECT_EQ(token.get_type(), TOKEN_NUMBER);
-    EXPECT_DOUBLE_EQ(token.as_number(), 45.67);
+    Tokenizer tokenizer("123/456 -789/10 +22/7 7894138974138974317894318794132879431897431789431789/7894138974138974317894318794132879431897431789431789 7894138974138974317894318794132879431897431789431789/333333333333333313213233213132333");
+    Token token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_RAT);
+    EXPECT_EQ(token.as_number_rat(), rational(123, 456));
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_RAT);
+    EXPECT_EQ(token.as_number_rat(), rational(-789, 10));
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_RAT);
+    EXPECT_EQ(token.as_number_rat(), rational(22, 7));
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_RAT);
+    EXPECT_EQ(token.as_number_rat(), rational(1, 1));
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_RAT);
+    EXPECT_EQ(token.as_number_rat(), rational(integer("2631379658046324772631439598044293143965810596477263"), integer("111111111111111104404411071044111")));
 }
 
-TEST_F(TokenizerTest, NegativeNumberParsing)
+TEST_F(TokenizerTest, NumberRealParsing)
 {
-    Tokenizer tokenizer("-89");
-    const Token token = tokenizer.next();
-    EXPECT_EQ(token.get_type(), TOKEN_NUMBER);
-    EXPECT_DOUBLE_EQ(token.as_number(), -89.0);
+    Tokenizer tokenizer("123.0 -123.0 12345678901.0 4187189471398748913748931748913748913748913748913748913748931748931758975891759.0 312789123789e1000 1212312e-1200");
+    Token token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_REAL);
+    EXPECT_EQ(token.as_number_real(), 123.0);
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_REAL);
+    EXPECT_EQ(token.as_number_real(), -123.0);
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_REAL);
+    EXPECT_EQ(token.as_number_real(), 12345678901.0);
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_REAL);
+    EXPECT_EQ(token.as_number_real(), from_string("4187189471398748913748931748913748913748913748913748913748931748931758975891759.0"));
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_REAL);
+    EXPECT_EQ(token.as_number_real(), 312789123789e1000L);
+    token = tokenizer.next();
+    EXPECT_EQ(token.get_type(), TOKEN_NUMBER_REAL);
+    EXPECT_EQ(token.as_number_real(), 1212312e-1200L);
 }
 
 TEST_F(TokenizerTest, StringParsing)
@@ -125,7 +164,7 @@ TEST_F(TokenizerTest, SkipWhitespace)
 {
     Tokenizer tokenizer("  123  \n  \"abc\"  \t  true  ");
 
-    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_NUMBER);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_NUMBER_INT);
 
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_STRING);
 
@@ -137,7 +176,7 @@ TEST_F(TokenizerTest, Quote)
     Tokenizer tokenizer("'123 'abc '(a b c) '()");
 
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_QUOTE);
-    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_NUMBER);
+    EXPECT_EQ(tokenizer.next().get_type(), TOKEN_NUMBER_INT);
 
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_QUOTE);
     EXPECT_EQ(tokenizer.next().get_type(), TOKEN_SYMBOL);
@@ -163,11 +202,11 @@ TEST_F(TokenizerTest, ComplexExpression)
         TOKEN_SYMBOL,
         TOKEN_LPAREN, TOKEN_SYMBOL, TOKEN_SYMBOL, TOKEN_RPAREN,
         TOKEN_LPAREN, TOKEN_SYMBOL,
-        TOKEN_LPAREN, TOKEN_SYMBOL, TOKEN_SYMBOL, TOKEN_NUMBER, TOKEN_RPAREN,
-        TOKEN_NUMBER,
+        TOKEN_LPAREN, TOKEN_SYMBOL, TOKEN_SYMBOL, TOKEN_NUMBER_INT, TOKEN_RPAREN,
+        TOKEN_NUMBER_INT,
         TOKEN_LPAREN, TOKEN_SYMBOL, TOKEN_SYMBOL,
         TOKEN_LPAREN, TOKEN_SYMBOL,
-        TOKEN_LPAREN, TOKEN_SYMBOL, TOKEN_SYMBOL, TOKEN_NUMBER, TOKEN_RPAREN,
+        TOKEN_LPAREN, TOKEN_SYMBOL, TOKEN_SYMBOL, TOKEN_NUMBER_INT, TOKEN_RPAREN,
         TOKEN_RPAREN,
         TOKEN_RPAREN,
         TOKEN_RPAREN,
@@ -192,7 +231,6 @@ TEST_F(TokenizerTest, EndOfInput)
     const Token token = tokenizer.next();
     EXPECT_EQ(token.get_type(), TOKEN_EOI);
 
-    // 连续调用应该继续返回 EOI
     const Token token2 = tokenizer.next();
     EXPECT_EQ(token2.get_type(), TOKEN_EOI);
 }

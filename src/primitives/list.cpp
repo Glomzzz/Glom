@@ -27,7 +27,7 @@ shared_ptr<Expr> primitives::car(const shared_ptr<Context>& context, shared_ptr<
     shared_ptr<Expr> pair_expr = nullptr;
     primitives_utils::expect_1_arg("car", args, pair_expr);
     pair_expr = context->eval(pair_expr);
-    if (pair_expr->get_type() != PAIR)
+    if (!pair_expr->is_pair())
     {
         throw GlomError("car: argument is not a pair");
     }
@@ -43,7 +43,7 @@ shared_ptr<Expr> primitives::cdr(const shared_ptr<Context>& context, shared_ptr<
     shared_ptr<Expr> pair_expr = nullptr;
     primitives_utils::expect_1_arg("car", args, pair_expr);
     pair_expr = context->eval(pair_expr);
-    if (pair_expr->get_type() != PAIR)
+    if (!pair_expr->is_pair())
     {
         throw GlomError("cdr: argument is not a pair");
     }

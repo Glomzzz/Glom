@@ -34,6 +34,8 @@ public:
 
 namespace primitives_utils
 {
+    bool generic_num_eq(shared_ptr<Expr>& a, shared_ptr<Expr>& b);
+    void coerce_number(shared_ptr<Expr>& a, shared_ptr<Expr>& b);
     void expect_1_arg(const string& proc, const shared_ptr<Pair>& args, shared_ptr<Expr>& a);
     void expect_2_args(const string& name, const shared_ptr<Pair>& args, shared_ptr<Expr>& a, shared_ptr<Expr>& b);
     void expect_2_or_3_args(const string& name, const shared_ptr<Pair>& args, shared_ptr<Expr>& a, shared_ptr<Expr>& b, shared_ptr<Expr>& c);
@@ -52,6 +54,7 @@ namespace primitives
     shared_ptr<Expr> mul(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> div(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> remainder(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> modulo(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> power(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     // Number comparisons
     shared_ptr<Expr> eq(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);

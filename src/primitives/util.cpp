@@ -6,6 +6,33 @@
 #include "primitive.h"
 #include "expr.h"
 
+void primitives_utils::coerce_number(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
+{
+    if (!a->is_number() || !b->is_number())
+    {
+        throw GlomError("Invalid argument +: both arguments must be numbers");
+    }
+    if (a->get_type() == b->get_type())
+    {
+        return;
+    }
+    if (a->is_number_real() || b->is_number_real())
+    {
+        if (!a->is_number_real())
+            a = Expr::make_number_real(a->to_number_real());
+        if (!b->is_number_real())
+            b = Expr::make_number_real(b->to_number_real());
+        return;
+    }
+    if (a->is_number_rat() || b->is_number_rat())
+    {
+        if (!a->is_number_rat())
+            a = Expr::make_number_rat(a->to_number_rat());
+        if (!b->is_number_rat())
+            b = Expr::make_number_rat(b->to_number_rat());
+    }
+}
+
 void primitives_utils::expect_1_arg(const string& proc, const shared_ptr<Pair>& args, shared_ptr<Expr>& a)
 {
     if (args->empty())

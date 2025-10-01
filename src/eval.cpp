@@ -2,8 +2,6 @@
 // Created by glom on 9/26/25.
 //
 
-#include <iostream>
-
 #include "context.h"
 #include "expr.h"
 #include "error.h"
@@ -13,70 +11,52 @@ shared_ptr<Expr> Context::eval(shared_ptr<Expr> expr) {
     {
         throw GlomError("Cannot evaluate null expression");
     }
-
-    switch (expr->get_type())
+    if (expr->is_symbol())
     {
-    case NUMBER:
-    case STRING:
-    case BOOLEAN:
-    case LAMBDA:
-    case PRIMITIVE:
-        return std::move(expr);
-
-    case SYMBOL:
+        const auto& name = expr->as_symbol();
+        auto var = get(name);
+        if (!var)
         {
-            const auto& name = expr->as_symbol();
-            auto var = get(name);
-            if (!var)
-            {
-                throw GlomError("Undefined variable: " + view_to_string(name));
-            }
-            return var;
+            throw GlomError("Undefined variable: " + view_to_string(name));
         }
-
-    case PAIR:
-        {
-            const auto pair = expr->as_pair();
-            auto proc = eval(std::move(pair->car()));
-            auto rest = pair->cdr();
-            shared_ptr<Pair> args = nullptr;
-            if (rest && rest->get_type() == PAIR)
-            {
-                args = rest->as_pair();
-            } else if (rest)
-            {
-                args = Pair::single(std::move(rest));
-            }
-
-            switch (proc->get_type())
-            {
-            case PRIMITIVE:
-                {
-                    const auto primitive = proc->as_primitive();
-                    return (*primitive)(shared_from_this(),std::move(args));
-                }
-            case LAMBDA:
-                {
-                    const auto lambda = proc->as_lambda();
-                    const auto& params = lambda->get_params();
-                    const auto& body = lambda->get_body();
-                    shared_ptr<Context> apply_context = nullptr;
-                    if (params.empty())
-                    {
-                        apply_context = lambda->get_context();
-                    } else
-                    {
-                        apply_context = eval_apply_context(proc, lambda->get_context(), params, std::move(args));
-                    }
-                    return apply_context->eval(body);
-                }
-            default:
-                throw GlomError( proc->to_string() + " is not a procedure: " + expr->to_string());
-            }
-        }
-    default:
-        throw GlomError("Unsupported expression type");
+        return var;
     }
+    if (!expr->is_pair())
+    {
+        return std::move(expr);
+    }
+    const auto pair = expr->as_pair();
+    const auto proc = eval(std::move(pair->car()));
+    auto rest = pair->cdr();
+    shared_ptr<Pair> args = nullptr;
+    if (rest && rest->is_pair())
+    {
+        args = rest->as_pair();
+    } else if (rest)
+    {
+        args = Pair::single(std::move(rest));
+    }
+    if (proc->is_primitive())
+    {
+        const auto primitive = proc->as_primitive();
+        return (*primitive)(shared_from_this(),std::move(args));
+    }
+    if (proc->is_lambda())
+    {
+        const auto lambda = proc->as_lambda();
+        const auto& params = lambda->get_params();
+        const auto& body = lambda->get_body();
+        shared_ptr<Context> apply_context = nullptr;
+        if (params.empty())
+        {
+            apply_context = lambda->get_context();
+        } else
+        {
+            apply_context = eval_apply_context(proc, lambda->get_context(), params, std::move(args));
+        }
+        return apply_context->eval(body);
+    }
+    throw GlomError( proc->to_string() + " is not a procedure: " + expr->to_string());
 }
 
 
