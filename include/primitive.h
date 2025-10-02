@@ -9,7 +9,9 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include "eval.h"
 
+struct Continuation;
 class Pair;
 class Context;
 class Expr;
@@ -34,6 +36,7 @@ public:
 
 namespace primitives_utils
 {
+    shared_ptr<Expr> continuation(const shared_ptr<Context>& context, shared_ptr<Pair>&& exprs);
     bool generic_num_eq(shared_ptr<Expr>& a, shared_ptr<Expr>& b);
     void coerce_number(shared_ptr<Expr>& a, shared_ptr<Expr>& b);
     void expect_1_arg(const string& proc, const shared_ptr<Pair>& args, shared_ptr<Expr>& a);

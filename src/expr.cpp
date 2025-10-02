@@ -128,6 +128,7 @@ Expr::Expr(shared_ptr<Pair>&& v) : value(std::move(v)) {}
 Expr::Expr(shared_ptr<Lambda>&& v) : value(std::move(v)) {}
 Expr::Expr(shared_ptr<Primitive>&& v) : value(std::move(v)) {}
 Expr::Expr(std::unique_ptr<string>&& v) : value(std::move(v)) {}
+Expr::Expr(std::unique_ptr<Continuation>&& v) : value(std::move(v)) {}
 Expr::Expr(const string_view v): value(v) {}
 
 
@@ -179,6 +180,10 @@ bool Expr::is_lambda() const
 bool Expr::is_primitive() const
 {
     return value.index() == PRIMITIVE;
+}
+bool Expr::is_cont() const
+{
+    return value.index() == CONTINUATION;
 }
 
 bool Expr::as_boolean() const
@@ -251,6 +256,11 @@ shared_ptr<Lambda> Expr::as_lambda() const
 shared_ptr<Primitive> Expr::as_primitive() const
 {
     return std::get<shared_ptr<Primitive>>(value);
+}
+
+Continuation& Expr::as_cont() const
+{
+    return *std::get<std::unique_ptr<Continuation>>(value);
 }
 
 bool Expr::to_boolean() const
@@ -361,6 +371,10 @@ shared_ptr<Expr> Expr::make_pair(shared_ptr<Pair> v)
 {
     return std::make_shared<Expr>(Expr(std::move(v)));
 }
+shared_ptr<Expr> Expr::make_cont(unique_ptr<Continuation> v)
+{
+    return std::make_shared<Expr>(Expr(std::move(v)));
+}
 
 
 Lambda::Lambda(vector<Param>&& params, shared_ptr<Pair> body, shared_ptr<Context> context)
@@ -425,6 +439,8 @@ string Expr::to_string() const
             return as_lambda()->to_string();
         case PRIMITIVE:
             return "<primitive:" + as_primitive()->get_name();
+        case CONTINUATION:
+            return "<continuation>";
         default:
             return "Unknown";
     }

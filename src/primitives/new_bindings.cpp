@@ -27,7 +27,7 @@ shared_ptr<Expr> primitives::define(const shared_ptr<Context>& context, shared_p
             name = name_params_expr->as_symbol();
             auto value_expr = std::move(current->car());
             current = current->cdr()->as_pair();
-            value = context->eval(std::move(value_expr));;
+            value = eval(context, std::move(value_expr));;
             if (!current->empty())
             {
                 throw GlomError("Invalid body define");
@@ -130,7 +130,7 @@ shared_ptr<Expr> primitives::let(const shared_ptr<Context>& context, shared_ptr<
         }
         const auto binding_name = name_expr->as_symbol();
         auto lambda_param = Param(binding_name, false);
-        shared_ptr<Expr> lambda_arg = context->eval(std::move(rest->car()));
+        shared_ptr<Expr> lambda_arg = eval(context, std::move(rest->car()));
         lambda_params.emplace_back(lambda_param);
         const auto new_tail = Pair::single(std::move(lambda_arg));
         if (!lambda_args)
@@ -152,5 +152,5 @@ shared_ptr<Expr> primitives::let(const shared_ptr<Context>& context, shared_ptr<
         lambda_context->add(name->as_symbol(), lambda);
     }
     const auto apply = Pair::cons(std::move(lambda), Expr::make_pair(lambda_args));
-    return context->eval(Expr::make_pair(apply));
+    return eval(context, Expr::make_pair(apply));
 }

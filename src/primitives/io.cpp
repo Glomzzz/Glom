@@ -19,7 +19,7 @@ shared_ptr<Expr> primitives::display(const shared_ptr<Context>& context, shared_
     for (auto expr : *args)
     {
         if (!expr) break;
-        const auto arg = context->eval(std::move(expr));
+        const auto arg = eval(context, std::move(expr));
         std::cout << arg->to_string();
     }
     return Expr::NOTHING;

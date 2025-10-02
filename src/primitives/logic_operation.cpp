@@ -12,7 +12,7 @@ shared_ptr<Expr> primitives::logical_and(const shared_ptr<Context>& context, sha
     for (auto expr : *args)
     {
         if (!expr) break;
-        if (!context->eval(std::move(expr))->to_boolean())
+        if (!eval(context, std::move(expr))->to_boolean())
         {
             return Expr::FALSE;
         }
@@ -24,7 +24,7 @@ shared_ptr<Expr> primitives::logical_or(const shared_ptr<Context>& context, shar
     for (auto expr : *args)
     {
         if (!expr) break;
-        if (context->eval(std::move(expr))->to_boolean())
+        if (eval(context, std::move(expr))->to_boolean())
         {
             return Expr::TRUE;
         }
@@ -35,6 +35,6 @@ shared_ptr<Expr> primitives::logical_not(const shared_ptr<Context>& context, sha
 {
     shared_ptr<Expr> expr = nullptr;
     primitives_utils::expect_1_arg("not", args, expr);
-    expr = context->eval(expr);
+    expr = eval(context, expr);
     return Expr::make_boolean(!expr->to_boolean());
 }

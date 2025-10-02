@@ -28,6 +28,7 @@ constexpr auto SYMBOL = 6;
 constexpr auto LAMBDA = 7;
 constexpr auto PRIMITIVE = 8;
 constexpr auto PAIR = 9;
+constexpr auto CONTINUATION = 10;
 
 
 class rational;

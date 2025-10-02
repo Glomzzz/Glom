@@ -18,7 +18,6 @@ using std::shared_ptr;
 using std::unordered_map;
 
 class Expr;
-class Param;
 
 typedef unordered_map<std::string_view, shared_ptr<Expr>> variables;
 /**
@@ -32,6 +31,7 @@ protected:
     shared_ptr<Context> parent = nullptr;
     variables bindings;
 public:
+    size_t depth;
     shared_ptr<Expr> get(const std::string_view& name) const;
     bool has(const std::string_view& name) const;
     Context& operator=(const Context&) = delete;
@@ -39,13 +39,6 @@ public:
     void set_parent(shared_ptr<Context> new_parent);
     void add(std::string_view name, shared_ptr<Expr> value);
     void add_primitive(const string& name, PrimitiveProc proc);
-
-    shared_ptr<Expr> eval(shared_ptr<Expr> expr);
-    shared_ptr<Expr> eval(const shared_ptr<Pair>& exprs);
-    shared_ptr<Expr> eval(const vector<shared_ptr<Expr>>& exprs);
-
-    shared_ptr<Context> eval_apply_context(const shared_ptr<Expr>& proc, shared_ptr<Context> current_parent,
-                                                  const vector<Param>& params, shared_ptr<Pair>&& args);
 
     string to_string() const;
 

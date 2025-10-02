@@ -5,6 +5,7 @@
 #include "expr.h"
 #include "context.h"
 #include "parser.h"
+#include "eval.h"
 
 class SchemePrimitivesTest : public ::testing::Test
 {
@@ -22,20 +23,20 @@ protected:
     [[nodiscard]] shared_ptr<Expr> eval(const std::string& input) const
     {
         const auto exprs = parse(input);
-        return context->eval(exprs);
+        return ::eval(context, exprs);
     }
 
     void perform(const std::string& input) const
     {
         const auto exprs = parse(input);
-        context->eval(exprs);
+        ::eval(context, exprs);
     }
 
     static shared_ptr<Expr> parse_and_get_first(const std::string& input)
     {
-        auto exprs = parse(input);
-        if (exprs.empty()) return Expr::NOTHING;
-        return exprs[0];
+        const auto exprs = parse(input);
+        if (exprs->empty()) return Expr::NOTHING;
+        return exprs->car();
     }
 
     std::shared_ptr<Context> context;

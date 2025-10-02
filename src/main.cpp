@@ -150,12 +150,12 @@ void repl()
         try
         {
             auto exprs = parse(input);
-            if (exprs.empty())
+            if (exprs->empty())
             {
                 continue;
             }
 
-            const auto result = context->eval(exprs);
+            const auto result = eval(context, exprs);
             std::cout << result->to_string() << '\n';
         }
         catch (const std::exception& e)

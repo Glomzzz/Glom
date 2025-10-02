@@ -81,16 +81,27 @@ public:
         }
     }
 
-    vector<shared_ptr<Expr>> parse()
+    shared_ptr<Pair> parse()
     {
-        vector<shared_ptr<Expr>> result;
+        shared_ptr<Pair> result = nullptr;
+        shared_ptr<Pair> current = nullptr;
         Token token = tokenizer.next();
         while (token.get_type() != TOKEN_EOI)
         {
             auto next = parse_with(std::move(token));
             if (!next)
                 throw std::runtime_error("invalid syntax ()");
-            result.push_back(next);
+            if (!result)
+            {
+                result = Pair::single(std::move(next));
+                current = result;
+            }
+            else
+            {
+                const auto next_pair = Pair::single(std::move(next));
+                current->set_cdr(Expr::make_pair(next_pair));
+                current = next_pair;
+            }
             token = tokenizer.next();
         }
         return result;
@@ -100,13 +111,13 @@ public:
 shared_ptr<Expr> parse_expr(string input)
 {
     auto exprs = parse(std::move(input));
-    if (exprs.size() != 1)
+    if (exprs->empty())
     {
-        throw std::runtime_error("Expected a single expression, got " + std::to_string(exprs.size()));
+        throw std::runtime_error("Expected a single expression, got " + exprs->to_string());
     }
-    return exprs[0];
+    return exprs->car();
 }
-vector<shared_ptr<Expr>> parse(string input)
+shared_ptr<Pair> parse(string input)
 {
     Parser parser(std::move(input));
     return parser.parse();

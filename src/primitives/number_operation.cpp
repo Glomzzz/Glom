@@ -158,7 +158,7 @@ shared_ptr<Expr> primitives::add(const shared_ptr<Context>& context, shared_ptr<
     for (auto expr : *args)
     {
         if (!expr) break;
-        auto arg = context->eval(std::move(expr));
+        auto arg = eval(context, std::move(expr));
         if (!arg->is_number())
         {
             throw GlomError("Invalid argument +: " + arg->to_string());
@@ -178,7 +178,7 @@ shared_ptr<Expr> primitives::sub(const shared_ptr<Context>& context, shared_ptr<
     {
         throw GlomError("Invalid number of arguments -: at least one argument required");
     }
-    const auto minuend_expr = context->eval(args->car());
+    const auto minuend_expr = eval(context, args->car());
     if (!minuend_expr->is_number())
     {
         throw GlomError("Invalid argument -: " + minuend_expr->to_string());
@@ -191,7 +191,7 @@ shared_ptr<Expr> primitives::sub(const shared_ptr<Context>& context, shared_ptr<
     for (const auto subtrahends = args->cdr()->as_pair(); auto expr : *subtrahends)
     {
         if (!expr) break;
-        auto arg = context->eval(std::move(expr));
+        auto arg = eval(context, std::move(expr));
         if (!arg->is_number())
         {
             throw GlomError("Invalid argument -: " + arg->to_string());
@@ -211,7 +211,7 @@ shared_ptr<Expr> primitives::mul(const shared_ptr<Context>& context, shared_ptr<
     for (auto expr : *args)
     {
         if (!expr) break;
-        auto arg = context->eval(std::move(expr));
+        auto arg = eval(context, std::move(expr));
         if (!arg->is_number())
         {
             throw GlomError("Invalid argument *: " + arg->to_string());
@@ -231,7 +231,7 @@ shared_ptr<Expr> primitives::div(const shared_ptr<Context>& context, shared_ptr<
     {
         throw GlomError("Invalid number of arguments /: at least one argument required");
     }
-    const auto dividend_expr = context->eval(args->car());
+    const auto dividend_expr = eval(context, args->car());
     if (!dividend_expr->is_number())
     {
         throw GlomError("Invalid argument /: " + dividend_expr->to_string());
@@ -244,7 +244,7 @@ shared_ptr<Expr> primitives::div(const shared_ptr<Context>& context, shared_ptr<
     for (const auto divisors = args->cdr()->as_pair(); auto expr : *divisors)
     {
         if (!expr) break;
-        auto arg = context->eval(std::move(expr));
+        auto arg = eval(context, std::move(expr));
         if (!arg->is_number())
         {
             throw GlomError("Invalid argument /: " + arg->to_string());
@@ -259,8 +259,8 @@ shared_ptr<Expr> primitives::remainder(const shared_ptr<Context>& context, share
 {
     shared_ptr<Expr> a,b = nullptr;
     primitives_utils::expect_2_args("remainder", args, a, b);
-    a = context->eval(std::move(a));
-    b = context->eval(std::move(b));
+    a = eval(context, std::move(a));
+    b = eval(context, std::move(b));
 
     if (!a->is_number_int() || !b->is_number_int())
     {
@@ -280,8 +280,8 @@ shared_ptr<Expr> primitives::modulo(const shared_ptr<Context>& context, shared_p
 {
     shared_ptr<Expr> a,b = nullptr;
     primitives_utils::expect_2_args("modulo", args, a, b);
-    a = context->eval(std::move(a));
-    b = context->eval(std::move(b));
+    a = eval(context, std::move(a));
+    b = eval(context, std::move(b));
 
     if (!a->is_number_int() || !b->is_number_int())
     {
@@ -302,8 +302,8 @@ shared_ptr<Expr> primitives::power(const shared_ptr<Context>& context, shared_pt
 {
     shared_ptr<Expr> base_expr, exp_expr = nullptr;
     primitives_utils::expect_2_args("expt", args, base_expr, exp_expr);
-    base_expr = context->eval(std::move(base_expr));
-    exp_expr = context->eval(std::move(exp_expr));
+    base_expr = eval(context, std::move(base_expr));
+    exp_expr = eval(context, std::move(exp_expr));
     if (!base_expr->is_number() || !exp_expr->is_number())
     {
         throw GlomError("Invalid argument expt: both arguments must be numbers");

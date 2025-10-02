@@ -15,9 +15,10 @@ using std::unique_ptr;
 using std::shared_ptr;
 
 class Expr;
+class Pair;
 
 shared_ptr<Expr> parse_expr(string input);
-vector<shared_ptr<Expr>> parse(string input);
+shared_ptr<Pair> parse(string input);
 
 
 #endif //GLOM_PARSER_H

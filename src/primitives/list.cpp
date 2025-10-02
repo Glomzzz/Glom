@@ -11,22 +11,22 @@ shared_ptr<Expr> primitives::is_null(const shared_ptr<Context>& context, shared_
 {
     shared_ptr<Expr> expr = nullptr;
     primitives_utils::expect_1_arg("null?", args, expr);
-    expr = context->eval(expr);
+    expr = eval(context, expr);
     return Expr::make_boolean(expr->is_nil());
 }
 shared_ptr<Expr> primitives::cons(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
 {
     shared_ptr<Expr> a, b = nullptr;
     primitives_utils::expect_2_args("cons", args, a, b);
-    a = context->eval(a);
-    b = context->eval(b);
+    a = eval(context, a);
+    b = eval(context, b);
     return Expr::make_pair(Pair::cons(a,b));
 }
 shared_ptr<Expr> primitives::car(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
 {
     shared_ptr<Expr> pair_expr = nullptr;
     primitives_utils::expect_1_arg("car", args, pair_expr);
-    pair_expr = context->eval(pair_expr);
+    pair_expr = eval(context, pair_expr);
     if (!pair_expr->is_pair())
     {
         throw GlomError("car: argument is not a pair");
@@ -42,7 +42,7 @@ shared_ptr<Expr> primitives::cdr(const shared_ptr<Context>& context, shared_ptr<
 {
     shared_ptr<Expr> pair_expr = nullptr;
     primitives_utils::expect_1_arg("car", args, pair_expr);
-    pair_expr = context->eval(pair_expr);
+    pair_expr = eval(context, pair_expr);
     if (!pair_expr->is_pair())
     {
         throw GlomError("cdr: argument is not a pair");
@@ -61,7 +61,7 @@ shared_ptr<Expr> primitives::list(const shared_ptr<Context>& context, shared_ptr
     for (auto elem_expr : *args)
     {
         if (!elem_expr) break;
-        auto last = context->eval(std::move(elem_expr));
+        auto last = eval(context, std::move(elem_expr));
         if (!list)
         {
             list = Pair::single(std::move(last));
