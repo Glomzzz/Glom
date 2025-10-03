@@ -13,11 +13,11 @@ shared_ptr<Expr> primitives::cond_if(const shared_ptr<Context>& context, shared_
     primitives_utils::expect_2_or_3_args("if", args, cond, then, otherwise);
     if (const auto evaluated_cond = eval(context, cond); evaluated_cond->to_boolean())
     {
-        return primitives_utils::continuation(context, Pair::single(std::move(then)));
+        return make_continuation(context, Pair::single(std::move(then)));
     }
     if (otherwise != nullptr)
     {
-        return primitives_utils::continuation(context, Pair::single(std::move(otherwise)));
+        return make_continuation(context, Pair::single(std::move(otherwise)));
     }
     return Expr::NOTHING;
 }
@@ -70,7 +70,7 @@ shared_ptr<Expr> primitives::cond(const shared_ptr<Context>& context, shared_ptr
         {
             body = Pair::single(std::move(body_expr));
         }
-        return primitives_utils::continuation(context, std::move(body));
+        return make_continuation(context, std::move(body));
     }
     return Expr::NOTHING;
 }

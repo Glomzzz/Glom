@@ -2,7 +2,6 @@
 #include <string>
 #include <memory>
 #include <sstream>
-#include <vector>
 
 #include "parser.h"
 #include "context.h"
@@ -57,10 +56,6 @@ public:
                 break;
             case '"':
                 in_string = true;
-                break;
-            case ';':
-                // Skip comments until end of line
-                // Comments don't affect paren balancing
                 break;
             default:
                 break;
@@ -199,14 +194,13 @@ void repl()
 
         try
         {
-            auto exprs = parse(input);
+            const auto exprs = parse(input);
             if (!exprs || exprs->empty())
             {
                 continue;
             }
 
-            const auto result = eval(context, exprs);
-            if (result)
+            if (const auto result = eval(context, exprs))
             {
                 std::cout << result->to_string() << '\n';
             }

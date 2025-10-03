@@ -6,11 +6,6 @@
 #include "context.h"
 #include "primitive.h"
 
-shared_ptr<Expr> primitives_utils::continuation(const shared_ptr<Context>& context, shared_ptr<Pair>&& exprs)
-{
-    return Expr::make_cont(std::make_unique<Continuation>(context, std::move(exprs)));
-}
-
 bool primitives_utils::generic_num_eq(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
 {
     coerce_number(a,b);

@@ -19,13 +19,14 @@ class Expr;
 class Param;
 class Pair;
 class Context;
+class Continuation;
 
-
-/**
- * Eval Model
- * - Eval with expr in context
- *   - The result is EvalResult = expr | Continuation
- */
+class GlomCont : public std::exception {
+public:
+    unique_ptr<Continuation> cont;
+    shared_ptr<Expr> value;
+    explicit GlomCont(unique_ptr<Continuation> cont, shared_ptr<Expr> value);
+};
 
 shared_ptr<Expr> eval(const shared_ptr<Context>& ctx, shared_ptr<Expr> expr);
 shared_ptr<Expr> eval(const shared_ptr<Context>& ctx, shared_ptr<Pair> rest);

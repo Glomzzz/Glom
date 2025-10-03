@@ -110,7 +110,7 @@ public:
 
 shared_ptr<Expr> parse_expr(string input)
 {
-    auto exprs = parse(std::move(input));
+    const auto exprs = parse(std::move(input));
     if (exprs->empty())
     {
         throw std::runtime_error("Expected a single expression, got " + exprs->to_string());

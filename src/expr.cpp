@@ -377,6 +377,16 @@ shared_ptr<Expr> Expr::make_cont(unique_ptr<Continuation> v)
 }
 
 
+shared_ptr<Expr> make_continuation(const shared_ptr<Context>& context, shared_ptr<Pair>&& exprs)
+{
+    return Expr::make_cont(std::make_unique<Continuation>(context, std::move(exprs)));
+}
+
+shared_ptr<Expr> make_callcc(const shared_ptr<Context>& context, shared_ptr<Pair>&& exprs, string_view name)
+{
+    return Expr::make_cont(std::make_unique<Continuation>(context, std::move(exprs), std::make_unique<string_view>(name)));
+}
+
 Lambda::Lambda(vector<Param>&& params, shared_ptr<Pair> body, shared_ptr<Context> context)
     : params(std::move(params)), body(std::move(body)), context(std::move(context)) {}
 

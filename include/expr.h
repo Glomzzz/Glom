@@ -89,6 +89,8 @@ struct Continuation
 {
     shared_ptr<Context> context;
     shared_ptr<Pair> exprs;
+    unique_ptr<string_view> callcc = nullptr;
+
 };
 
 using ExprValue = std::variant<
@@ -205,5 +207,8 @@ public:
 };
 
 
+shared_ptr<Expr> make_continuation(const shared_ptr<Context>& context, shared_ptr<Pair>&& exprs);
+
+shared_ptr<Expr> make_callcc(const shared_ptr<Context>& context, shared_ptr<Pair>&& exprs, string_view name);
 
 #endif //GLOM_EXPR_H
