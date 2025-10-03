@@ -225,6 +225,35 @@ TEST_F(TokenizerTest, ComplexExpression)
     EXPECT_EQ(actual_types, expected_types);
 }
 
+TEST_F(TokenizerTest, Comments)
+{
+    Tokenizer tokenizer(R"(
+        ; This is a comment
+        (define x 42) ; Define x
+        (define y 3.14) ; Define y
+        ; Another comment
+        (define msg "Hello, World!") ; Define msg
+    )");
+
+    const std::vector expected_types = {
+        TOKEN_LPAREN, TOKEN_SYMBOL, TOKEN_SYMBOL, TOKEN_NUMBER_INT, TOKEN_RPAREN,
+        TOKEN_LPAREN, TOKEN_SYMBOL, TOKEN_SYMBOL, TOKEN_NUMBER_REAL, TOKEN_RPAREN,
+        TOKEN_LPAREN, TOKEN_SYMBOL, TOKEN_SYMBOL, TOKEN_STRING, TOKEN_RPAREN,
+        TOKEN_EOI
+    };
+
+    std::vector<TokenType> actual_types;
+    Token current = tokenizer.next();
+    while (current.get_type() != TOKEN_EOI)
+    {
+        actual_types.push_back(current.get_type());
+        current = tokenizer.next();
+    }
+    actual_types.push_back(current.get_type());
+
+    EXPECT_EQ(actual_types, expected_types);
+}
+
 TEST_F(TokenizerTest, EndOfInput)
 {
     Tokenizer tokenizer("");
