@@ -130,7 +130,7 @@ shared_ptr<Expr> primitives::let(const shared_ptr<Context>& context, shared_ptr<
         }
         const auto binding_name = name_expr->as_symbol();
         auto lambda_param = Param(binding_name, false);
-        shared_ptr<Expr> lambda_arg = eval(context, std::move(rest->car()));
+        shared_ptr<Expr> lambda_arg = std::move(rest->car());
         lambda_params.emplace_back(lambda_param);
         const auto new_tail = Pair::single(std::move(lambda_arg));
         if (!lambda_args)
