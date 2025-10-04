@@ -77,6 +77,9 @@ TEST_F(SchemePrimitivesTest, LambdaApplication)
 
     perform("(define add (lambda (x y) (+ x y)))");
     EXPECT_EQ(integer(7),eval("(add 3 4)")->as_number_int());
+
+    perform("(define varargs (lambda (x . list) (+ x (apply + list))))");
+    EXPECT_EQ(integer(12),eval("(varargs 3 4 5)")->as_number_int());
 }
 
 // Binding tests

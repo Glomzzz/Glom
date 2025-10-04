@@ -22,7 +22,29 @@ shared_ptr<Context> eval_apply_context(const shared_ptr<Context>& ctx, const sha
         const auto& name = param.get_name();
         if (param.is_vararg())
         {
-            context->add(name, Expr::make_pair(std::move(rest)));
+            shared_ptr<Pair> varargs = nullptr;
+            shared_ptr<Pair> tail = nullptr;
+            for (const auto arg : *rest)
+            {
+                if (!arg) break;
+                auto vararg = eval(ctx, arg);
+                if (!varargs)
+                {
+                    varargs = Pair::single(std::move(vararg));
+                    tail = varargs;
+                }
+                else
+                {
+                    const auto tail_pair = Pair::single(std::move(vararg));
+                    tail->set_cdr(Expr::make_pair(tail_pair));
+                    tail = tail_pair;
+                }
+            }
+            if (!varargs)
+            {
+                varargs = Pair::EMPTY;
+            }
+            context->add(name, Expr::make_pair(std::move(varargs)));
             index = params.size();
             break;
         }
