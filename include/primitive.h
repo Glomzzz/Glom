@@ -105,6 +105,7 @@ namespace primitives
     // New bindings
     shared_ptr<Expr> define(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> let(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> let_star(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     // Condition
     shared_ptr<Expr> cond_if(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> cond(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);

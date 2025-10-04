@@ -184,4 +184,17 @@ TEST_F(SchemeTypesTest, StringToNumber)
     EXPECT_EQ(Expr::FALSE, eval("(string->number \"12a3\")"));
 }
 
+// symbol->string
+TEST_F(SchemeTypesTest, SymbolToString)
+{
+    EXPECT_EQ("hello", eval("(symbol->string 'hello)")->as_string());
+    EXPECT_EQ("+", eval("(symbol->string '+)")->as_string());
+    EXPECT_EQ("a-b_c", eval("(symbol->string 'a-b_c)")->as_string());
+}
 
+// string->symbol
+TEST_F(SchemeTypesTest, StringToSymbol)
+{
+    EXPECT_EQ("hello", eval("(string->symbol \"hello\")->as_symbol()")->as_symbol());
+    EXPECT_EQ("+", eval("(string->symbol \"+\")->as_symbol()")->as_symbol());
+}

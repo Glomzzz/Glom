@@ -90,6 +90,8 @@ void add_type_utils(Context& builder)
     builder.add_primitive("inexact->exact", primitives::inexact_to_exact);
     builder.add_primitive("number->string", primitives::number_to_string);
     builder.add_primitive("string->number", primitives::string_to_number);
+    builder.add_primitive("symbol->string", primitives::symbol_to_string);
+    builder.add_primitive("string->symbol", primitives::string_to_symbol);
 }
 
 void add_quote_operation(Context& builder)
@@ -106,6 +108,7 @@ void add_new_bindings(Context& builder)
 {
     builder.add_primitive("define", primitives::define);
     builder.add_primitive("let", primitives::let);
+    builder.add_primitive("let*", primitives::let_star);
 }
 
 void add_number_comparators(Context& builder)

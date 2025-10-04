@@ -116,6 +116,18 @@ TEST_F(SchemePrimitivesTest, Let)
     EXPECT_ANY_THROW(perform("z"));
 }
 
+// let*
+TEST_F(SchemePrimitivesTest, LetStar)
+{
+    // Let* should create sequential local bindings
+    EXPECT_EQ(integer(9),eval("(let* ((x 2) (y (+ x 5))) (+ x y))")->as_number_int());
+    EXPECT_EQ(integer(65),eval("(let* ((x 5) (y (* x 12))) (+ x y))")->as_number_int());
+
+    // Let* should not leak bindings
+    perform("(let* ((z 200)) z)");
+    EXPECT_ANY_THROW(perform("z"));
+}
+
 
 // Logic operations tests
 TEST_F(SchemePrimitivesTest, LogicalAnd)

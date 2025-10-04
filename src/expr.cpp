@@ -444,7 +444,7 @@ string Expr::to_string() const
         case NUMBER_REAL:
             return std::to_string(as_number_real());
         case STRING:
-            return "\"" + as_string() + "\"";
+            return as_string();
         case BOOLEAN:
             return as_boolean() ? "true" : "false";
         case SYMBOL:
