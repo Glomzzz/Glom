@@ -41,8 +41,10 @@ namespace primitives_utils
     bool generic_num_gt(shared_ptr<Expr>& a, shared_ptr<Expr>& b);
     void coerce_number(shared_ptr<Expr>& a, shared_ptr<Expr>& b);
     void expect_1_arg(const string& proc, const shared_ptr<Pair>& args, shared_ptr<Expr>& a);
-    void expect_2_args(const string& name, const shared_ptr<Pair>& args, shared_ptr<Expr>& a, shared_ptr<Expr>& b);
-    void expect_2_or_3_args(const string& name, const shared_ptr<Pair>& args, shared_ptr<Expr>& a, shared_ptr<Expr>& b, shared_ptr<Expr>& c);
+    void expect_2_args(const string& proc, const shared_ptr<Pair>& args, shared_ptr<Expr>& a, shared_ptr<Expr>& b);
+    void expect_2_or_3_args(const string& proc, const shared_ptr<Pair>& args, shared_ptr<Expr>& a, shared_ptr<Expr>& b, shared_ptr<Expr>& c);
+    void take_car(const string& proc, const shared_ptr<Expr>& list, const shared_ptr<Expr>& expr, shared_ptr<Expr>& car);
+    void take_cdr(const string& proc, const shared_ptr<Expr>& list, const shared_ptr<Expr>& expr, shared_ptr<Expr>& cdr);
 }
 
 namespace primitives
@@ -132,7 +134,36 @@ namespace primitives
     shared_ptr<Expr> is_null(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> cons(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> car(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> caar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> caaar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> caaaar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> caaadr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> caadr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> caadar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> caaddr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cadr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cadar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cadaar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cadadr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> caddr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> caddar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cadddr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> cdr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cdar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cdaar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cdaaar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cdaadr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cdadr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cdadar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cdaddr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cddr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cddar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cddaar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cddadr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cdddr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cdddar(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> cddddr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> list(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> append(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
 }
 #endif //GLOM_PRIMITIVE_H

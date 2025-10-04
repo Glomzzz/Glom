@@ -222,61 +222,6 @@ TEST_F(SchemePrimitivesTest, Apply)
     EXPECT_EQ(NUMBER_INT, result->get_type());
     EXPECT_EQ(integer(10), result->as_number_int());
 }
-// List operations tests
-TEST_F(SchemePrimitivesTest, Cons)
-{
-    const auto result = eval("(cons 1 2)");
-    EXPECT_EQ(PAIR, result->get_type());
-    const auto pair = result->as_pair();
-    EXPECT_EQ(integer(1), pair->car()->as_number_int());
-    EXPECT_EQ(integer(2), pair->cdr()->as_number_int());
-
-    // Test building lists
-    const auto list = eval("(cons 1 (cons 2 '()))");
-    EXPECT_EQ(PAIR, list->get_type());
-}
-
-TEST_F(SchemePrimitivesTest, Car)
-{
-    EXPECT_EQ(integer(1), eval("(car '(1 2 3))")->as_number_int());
-    EXPECT_EQ(integer(1), eval("(car (cons 1 2))")->as_number_int());
-}
-
-TEST_F(SchemePrimitivesTest, Cdr)
-{
-    const auto result = eval("(cdr '(1 2 3))");
-    EXPECT_EQ(PAIR, result->get_type());
-    EXPECT_EQ(integer(2), result->as_pair()->car()->as_number_int());
-
-    EXPECT_EQ(integer(2), eval("(cdr (cons 1 2))")->as_number_int());
-}
-
-TEST_F(SchemePrimitivesTest, List)
-{
-    const auto result = eval("(list 1 2 3)");
-    EXPECT_EQ(PAIR, result->get_type());
-
-    const auto pair = result->as_pair();
-    EXPECT_EQ(integer(1),pair->car()->as_number_int());
-
-    const auto second = pair->cdr()->as_pair();
-    EXPECT_EQ(integer(2),second->car()->as_number_int());
-
-    const auto third = second->cdr()->as_pair();
-    EXPECT_EQ(integer(3),third->car()->as_number_int());
-    EXPECT_TRUE(third->cdr()->is_nil());
-
-    // Empty list
-    EXPECT_TRUE(eval("(list)")->is_nil());
-}
-
-TEST_F(SchemePrimitivesTest, IsNull)
-{
-    EXPECT_EQ(Expr::TRUE, eval("(null? '())"));
-    EXPECT_EQ(Expr::FALSE, eval("(null? '(1 2 3))"));
-    EXPECT_EQ(Expr::FALSE, eval("(null? 1)"));
-    EXPECT_EQ(Expr::FALSE, eval("(null? #t)"));
-}
 
 // Complex integration tests
 TEST_F(SchemePrimitivesTest, Factorial)

@@ -150,9 +150,38 @@ void add_list_operations(Context& builder)
 {
     builder.add_primitive("cons", primitives::cons);
     builder.add_primitive("car", primitives::car);
+    builder.add_primitive("caar", primitives::caar);
+    builder.add_primitive("caaar", primitives::caaar);
+    builder.add_primitive("caaaar", primitives::caaaar);
+    builder.add_primitive("caaadr", primitives::caaadr);
+    builder.add_primitive("caadr", primitives::caadr);
+    builder.add_primitive("caadar", primitives::caadar);
+    builder.add_primitive("caaddr", primitives::caaddr);
+    builder.add_primitive("cadr", primitives::cadr);
+    builder.add_primitive("cadar", primitives::cadar);
+    builder.add_primitive("cadaar", primitives::cadaar);
+    builder.add_primitive("cadadr", primitives::cadadr);
+    builder.add_primitive("caddr", primitives::caddr);
+    builder.add_primitive("caddar", primitives::caddar);
+    builder.add_primitive("cadddr", primitives::cadddr);
     builder.add_primitive("cdr", primitives::cdr);
+    builder.add_primitive("cdar", primitives::cdar);
+    builder.add_primitive("cdaar", primitives::cdaar);
+    builder.add_primitive("cdaaar", primitives::cdaaar);
+    builder.add_primitive("cdaadr", primitives::cdaadr);
+    builder.add_primitive("cdadr", primitives::cdadr);
+    builder.add_primitive("cdadar", primitives::cdadar);
+    builder.add_primitive("cdaddr", primitives::cdaddr);
+    builder.add_primitive("cddr", primitives::cddr);
+    builder.add_primitive("cddar", primitives::cddar);
+    builder.add_primitive("cddaar", primitives::cddaar);
+    builder.add_primitive("cddadr", primitives::cddadr);
+    builder.add_primitive("cdddr", primitives::cdddr);
+    builder.add_primitive("cdddar", primitives::cdddar);
+    builder.add_primitive("cddddr", primitives::cddddr);
     builder.add_primitive("list", primitives::list);
     builder.add_primitive("null?", primitives::is_null);
+    builder.add_primitive("append", primitives::append);
 }
 
 void add_eval_control(Context& builder)
