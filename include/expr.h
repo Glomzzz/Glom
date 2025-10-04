@@ -162,6 +162,7 @@ public:
     [[nodiscard]] bool is_symbol() const;
     [[nodiscard]] bool is_primitive() const;
     [[nodiscard]] bool is_cont() const;
+    void print() const;
     
     static const shared_ptr<Expr> TRUE;
     static const shared_ptr<Expr> FALSE;

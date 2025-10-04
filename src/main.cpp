@@ -150,10 +150,8 @@ public:
             }
             buffer << current_line;
 
-            std::string current_input = buffer.str();
-
             // Check if input is complete
-            if (is_input_complete(current_input))
+            if (std::string current_input = buffer.str(); is_input_complete(current_input))
             {
                 return current_input;
             }
@@ -202,7 +200,7 @@ void repl()
 
             if (const auto result = eval(context, exprs))
             {
-                std::cout << result->to_string() << '\n';
+                result->print();
             }
         }
         catch (const std::exception& e)
@@ -218,11 +216,12 @@ void repl()
     std::cout << "Goodbye!\n";
 }
 
-int main()
+int start_repl()
 {
     try
     {
         repl();
+        return 0;
     }
     catch (const std::exception& e)
     {
@@ -234,6 +233,62 @@ int main()
         std::cerr << "Unknown fatal error occurred\n";
         return 1;
     }
+}
+
+void run_file(const shared_ptr<Context>& context, const char* filename) {
+    printf("Running file: %s\n", filename);
+
+    FILE* file = fopen(filename, "r");
+    if (file == nullptr) {
+        fprintf(stderr, "Error: Could not open file '%s'\n", filename);
+        return;
+    }
+    // read file content into a string
+    std::string content;
+    char buffer[1024];
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), file)) > 0)
+    {
+        content.append(buffer, bytesRead);
+    }
+    if (ferror(file)) {
+        fprintf(stderr, "Error: Could not read file '%s'\n", filename);
+        fclose(file);
+        return;
+    }
+    const auto exprs = parse(content);
+    if (!exprs || exprs->empty()) {
+        fclose(file);
+        return;
+    }
+
+    if (const auto result = eval(context, exprs)) {
+        result->print();
+    }
+    fclose(file);
+
+}
+
+void run_files(const int argc, char *argv[]) {
+    const auto context = make_root_context();
+    // Process each file argument
+    try {
+        for (int i = 1; i < argc; i++) {
+            run_file(context, argv[i]);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << '\n';
+    } catch (...) {
+        std::cerr << "Unknown error occurred\n";
+    }
+}
+
+int main(const int argc, char *argv[])
+{
+    if (argc == 1) {
+        return start_repl();
+    }
+    run_files(argc, argv);
 
     return 0;
 }

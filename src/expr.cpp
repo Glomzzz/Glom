@@ -424,6 +424,12 @@ string Lambda::to_string() const
     return result;
 }
 
+void Expr::print() const
+{
+    if (is_nothing())
+        return;
+    printf("%s\n", to_string().data());
+}
 
 string Expr::to_string() const
 {
@@ -448,7 +454,7 @@ string Expr::to_string() const
         case LAMBDA:
             return as_lambda()->to_string();
         case PRIMITIVE:
-            return "<primitive:" + as_primitive()->get_name();
+            return "<primitive:" + as_primitive()->get_name() + ">";
         case CONTINUATION:
             return "<continuation>";
         default:

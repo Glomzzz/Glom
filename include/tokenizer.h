@@ -64,6 +64,7 @@ class Tokenizer
 {
     string input;
     size_t index;
+    bool lang = false;
 
     Token next_string();
     Token next_number();

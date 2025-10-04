@@ -56,13 +56,12 @@ shared_ptr<Expr> eval(const shared_ptr<Context>& ctx, shared_ptr<Pair> rest)
     {
         throw GlomError("Cannot evaluate null expression");
     }
-    bool tail = false;
     while (true)
     {
         expr = rest->car();
         rest = rest->cdr()->as_pair();
-        if (!tail)
-            tail = rest->empty();
+        const bool tail = rest->empty();
+        const bool root = current_ctx->depth == 0;
         if (expr->is_symbol())
         {
             const auto& name = expr->as_symbol();
@@ -75,6 +74,10 @@ shared_ptr<Expr> eval(const shared_ptr<Context>& ctx, shared_ptr<Pair> rest)
             {
                 return var;
             }
+            if (root)
+            {
+                var->print();
+            }
             continue;
         }
         if (!expr->is_pair())
@@ -82,6 +85,10 @@ shared_ptr<Expr> eval(const shared_ptr<Context>& ctx, shared_ptr<Pair> rest)
             if (tail)
             {
                 return std::move(expr);
+            }
+            if (root)
+            {
+                expr->print();
             }
             continue;
         }
@@ -126,12 +133,21 @@ shared_ptr<Expr> eval(const shared_ptr<Context>& ctx, shared_ptr<Pair> rest)
                     rest = cont_exprs;
                     continue;
                 }
-                eval(cont_ctx, std::move(cont_exprs));
+                const auto cont_result = eval(cont_ctx, std::move(cont_exprs));
+                if (root)
+                {
+                    cont_result->print();
+                }
             }
             if (tail)
             {
                 return result;
             }
+            if (root)
+            {
+                result->print();
+            }
+            continue;
         }
         if (proc->is_lambda())
         {
@@ -141,7 +157,7 @@ shared_ptr<Expr> eval(const shared_ptr<Context>& ctx, shared_ptr<Pair> rest)
             shared_ptr<Context> apply_context = nullptr;
             if (params.empty())
             {
-                apply_context = lambda->get_context();
+                apply_context = Context::new_context(lambda->get_context());
             }
             else
             {
@@ -149,11 +165,21 @@ shared_ptr<Expr> eval(const shared_ptr<Context>& ctx, shared_ptr<Pair> rest)
             }
             if (tail)
             {
+                if (root)
+                {
+                    return eval(apply_context, body);
+                }
                 current_ctx = apply_context;
                 rest = body;
                 continue;
             }
-            eval(apply_context, body);
+            const auto result = eval(apply_context, body);
+
+            if (root)
+            {
+                result->print();
+            }
+            continue;
         }
         if (proc->is_cont())
         {
