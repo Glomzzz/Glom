@@ -292,7 +292,15 @@ Token Tokenizer::next()
         return Token::make_end_of_input();
     }
     const char current = input[index];
-
+    if (!lang && index == 0 && current == '#')
+    {
+        lang = true;
+        while (index < input.size() && input[index] != '\n')
+        {
+            index++;
+        }
+        return next();
+    }
     if (current == ';')
     {
         // Skip comment until end of line

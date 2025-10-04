@@ -61,7 +61,7 @@ TEST_F(ParserTest, AtomParsing)
 
 TEST_F(ParserTest, ListParsing)
 {
-    auto exprs = parse("(1 2 3)");
+    const auto exprs = parse("(1 2 3)");
     const shared_ptr<Expr> list = std::move(exprs->car());
     EXPECT_EQ(PAIR, list->get_type());
     int index = 0;
@@ -74,7 +74,7 @@ TEST_F(ParserTest, ListParsing)
 
 TEST_F(ParserTest, QuoteParsing)
 {
-    auto exprs = parse("'(1 2 3)");
+    const auto exprs = parse("'(1 2 3)");
     const shared_ptr<Expr> list = std::move(exprs->car());
     EXPECT_EQ(PAIR, list->get_type());
     const auto& quote = list->as_pair();
@@ -88,9 +88,22 @@ TEST_F(ParserTest, QuoteParsing)
     }
 }
 
+TEST_F(ParserTest, QuotePairParsing)
+{
+    const auto exprs = parse("'((1 . 2) . (3 . 4))");
+    const shared_ptr<Expr> list = std::move(exprs->car());
+    EXPECT_EQ(PAIR, list->get_type());
+    const auto& quote = list->as_pair();
+    EXPECT_EQ("quote", quote->car()->as_symbol());
+    const auto& pair = quote->cdr()->as_pair()->car()->as_pair();
+    EXPECT_EQ("((1 . 2) 3 . 4)", pair->to_string());
+}
+
+
+
 TEST_F(ParserTest, NilParsing)
 {
-    auto exprs = parse("'()");
+    const auto exprs = parse("'()");
     const shared_ptr<Expr> quoted_nil = std::move(exprs->car());
     EXPECT_EQ(PAIR, quoted_nil->get_type());
     const auto& quote = quoted_nil->as_pair();
@@ -103,7 +116,7 @@ TEST_F(ParserTest, NilParsing)
 
 TEST_F(ParserTest, NestedList)
 {
-    auto exprs = parse("((1 2) (3 4))");
+    const auto exprs = parse("((1 2) (3 4))");
     const shared_ptr<Expr> list = std::move(exprs->car());
     EXPECT_EQ(PAIR, list->get_type());
     const auto& elements = list->as_pair();
