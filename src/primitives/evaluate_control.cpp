@@ -38,3 +38,20 @@ shared_ptr<Expr> primitives::callcc(const shared_ptr<Context>& context, shared_p
     auto cont = make_callcc(ctx, std::move(body), param_name);
     return cont;
 }
+
+//error
+shared_ptr<Expr> primitives::error(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
+{
+    if (args->empty())
+        throw GlomError("error: at least one argument required");
+    std::string message;
+    for (const auto& arg : *args)
+    {
+        if (!arg) break;
+        if (message.empty())
+            message = arg->to_string();
+        else
+            message += " " + arg->to_string();
+    }
+    throw GlomError("Error: " + message);
+}

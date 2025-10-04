@@ -188,6 +188,7 @@ void add_eval_control(Context& builder)
 {
     builder.add_primitive("apply", primitives::apply);
     builder.add_primitive("call/cc", primitives::callcc);
+    builder.add_primitive("error", primitives::error);
 }
 
 
