@@ -127,6 +127,8 @@ namespace primitives
     shared_ptr<Expr> string_to_number(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> symbol_to_string(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> string_to_symbol(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> eq_string(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> eq_string_ignore_case(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     // IO
     shared_ptr<Expr> display(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> read(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
@@ -166,5 +168,6 @@ namespace primitives
     shared_ptr<Expr> cddddr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> list(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> append(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> length(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
 }
 #endif //GLOM_PRIMITIVE_H

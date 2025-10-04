@@ -432,3 +432,27 @@ shared_ptr<Expr> primitives::append(const shared_ptr<Context>& context, shared_p
         return Expr::NIL;
     return Expr::make_pair(result);
 }
+
+// length
+shared_ptr<Expr> primitives::length(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
+{
+    shared_ptr<Expr> list_expr = nullptr;
+    primitives_utils::expect_1_arg("length", args, list_expr);
+    list_expr = eval(context, list_expr);
+    if (list_expr->is_nil())
+    {
+        return Expr::make_number_int(integer(0));
+    }
+    if (!list_expr->is_pair())
+    {
+        throw GlomError("length: argument is not a list: " + list_expr->to_string());
+    }
+    const auto list = list_expr->as_pair();
+    int64_t len = 0;
+    for (const auto& _ : *list)
+    {
+        if (!_ ) break;
+        len++;
+    }
+    return Expr::make_number_int(integer(len));
+}

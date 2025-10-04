@@ -135,6 +135,8 @@ void add_ptr_comparator(Context& builder)
     builder.add_primitive("eq?", primitives::eq_ptr);
     builder.add_primitive("eqv?", primitives::eq_val);
     builder.add_primitive("equal?", primitives::eq_struct);
+    builder.add_primitive("string=?", primitives::eq_string);
+    builder.add_primitive("string-ci=?", primitives::eq_string_ignore_case);
 }
 
 void add_condition(Context& builder)
@@ -185,6 +187,7 @@ void add_list_operations(Context& builder)
     builder.add_primitive("list", primitives::list);
     builder.add_primitive("null?", primitives::is_null);
     builder.add_primitive("append", primitives::append);
+    builder.add_primitive("length", primitives::length);
 }
 
 void add_eval_control(Context& builder)

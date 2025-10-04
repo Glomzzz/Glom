@@ -193,3 +193,67 @@ shared_ptr<Expr> primitives::string_to_symbol(const shared_ptr<Context>& context
     }
     return Expr::make_symbol(expr->as_string());
 }
+
+
+shared_ptr<Expr> primitives::eq_string(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
+{
+    if (args->empty() || args->cdr()->is_nil())
+    {
+        throw GlomError("Invalid number of arguments string=?: at least two arguments required");
+    }
+    const auto first_expr = eval(context, std::move(args->car()));
+    if (!first_expr->is_string())
+    {
+        throw GlomError("Invalid argument string=?: " + first_expr->to_string() + " is not a string");
+    }
+    const auto rest = args->cdr()->as_pair();
+    const auto& first = first_expr;
+    for (const auto it: *rest)
+    {
+        if (!it) break;
+        const auto next_expr = eval(context, it);
+        if (!next_expr->is_string())
+        {
+            throw GlomError("Invalid argument string=?: " + next_expr->to_string() + " is not a string");
+        }
+        if (first->as_string() != next_expr->as_string())
+        {
+            return Expr::FALSE;
+        }
+    }
+    return Expr::TRUE;
+}
+
+shared_ptr<Expr> primitives::eq_string_ignore_case(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
+{
+    if (args->empty() || args->cdr()->is_nil())
+    {
+        throw GlomError("Invalid number of arguments string-ci=?: at least two arguments required");
+    }
+    const auto first_expr = eval(context, std::move(args->car()));
+    if (!first_expr->is_string())
+    {
+        throw GlomError("Invalid argument string-ci=?: " + first_expr->to_string() + " is not a string");
+    }
+    const auto rest = args->cdr()->as_pair();
+    const auto& first = first_expr;
+    for (const auto it: *rest)
+    {
+        if (!it) break;
+        const auto next_expr = eval(context, it);
+        if (!next_expr->is_string())
+        {
+            throw GlomError("Invalid argument string-ci=?: " + next_expr->to_string() + " is not a string");
+        }
+
+        // case insensitive comparison
+        const auto& str1 = first->as_string();
+        const auto& str2 = next_expr->as_string();
+        if (str1.size() != str2.size()) return Expr::FALSE;
+        for (size_t i = 0; i < str1.size(); ++i)
+        {
+            if (tolower(str1[i]) != tolower(str2[i])) return Expr::FALSE;
+        }
+    }
+    return Expr::TRUE;
+}

@@ -195,6 +195,27 @@ TEST_F(SchemeTypesTest, SymbolToString)
 // string->symbol
 TEST_F(SchemeTypesTest, StringToSymbol)
 {
-    EXPECT_EQ("hello", eval("(string->symbol \"hello\")->as_symbol()")->as_symbol());
-    EXPECT_EQ("+", eval("(string->symbol \"+\")->as_symbol()")->as_symbol());
+    EXPECT_EQ("hello", eval("(string->symbol \"hello\")")->as_symbol());
+    EXPECT_EQ("+", eval("(string->symbol \"+\")")->as_symbol());
+}
+
+// string=?
+TEST_F(SchemeTypesTest, EqString)
+{
+    EXPECT_EQ(Expr::TRUE, eval("(string=? \"hello\" \"hello\")"));
+    EXPECT_EQ(Expr::FALSE, eval("(string=? \"hello\" \"Hello\")"));
+    EXPECT_EQ(Expr::TRUE, eval("(string=? \"\" \"\")"));
+    EXPECT_EQ(Expr::FALSE, eval("(string=? \"abc\" \"abcd\")"));
+    EXPECT_EQ(Expr::TRUE, eval("(string=? \"test\" \"test\" \"test\")"));
+    EXPECT_EQ(Expr::FALSE, eval("(string=? \"test\" \"test\" \"Test\")"));
+}
+
+// string-ci=?
+TEST_F(SchemeTypesTest, EqStringIgnoreCase)
+{
+    EXPECT_EQ(Expr::TRUE, eval("(string-ci=? \"hello\" \"Hello\")"));
+    EXPECT_EQ(Expr::TRUE, eval("(string-ci=? \"Test\" \"test\")"));
+    EXPECT_EQ(Expr::FALSE, eval("(string-ci=? \"abc\" \"abcd\")"));
+    EXPECT_EQ(Expr::TRUE, eval("(string-ci=? \"test\" \"TEST\" \"TeSt\")"));
+    EXPECT_EQ(Expr::FALSE, eval("(string-ci=? \"test\" \"test\" \"TesTt\")"));
 }
