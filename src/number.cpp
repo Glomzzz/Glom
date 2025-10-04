@@ -2,11 +2,14 @@
 // Created by glom on 9/30/25.
 //
 
+#include <algorithm>
 #include <charconv>
 #include <cmath>
+#include <iomanip>
 
 #include "type.h"
 #include <limits>
+#include <ranges>
 integer::integer() : value(static_cast<int64_t>(0)) {}
 
 integer::integer(int64_t val) : value(val) {}
@@ -545,6 +548,97 @@ rational rational::pow(const integer& exponent) const {
     return {num.pow(exponent), den.pow(exponent)};
 }
 
+std::variant<integer, real> integer::sqrt() const {
+    if (is_negative()) {
+        throw std::domain_error("Cannot compute square root of negative number");
+    }
+
+    if (is_zero()) {
+        return integer(0);
+    }
+
+    if (is_one()) {
+        return integer(1);
+    }
+
+    if (is_int64()) {
+        if (const int64_t val = as_int64(); val <= 1LL << 53) {
+            real root = std::sqrt(static_cast<real>(val));
+            if (const real nearest_int = std::round(root); std::abs(root - nearest_int) < 1e-10) {
+                return integer(static_cast<int64_t>(nearest_int));
+            }
+            return root;
+        }
+    }
+
+    const BigInt big_val = to_bigint();
+    const UBigInt n = big_val.abs();
+
+    if (n.is_one()) {
+        return integer(1);
+    }
+
+    UBigInt low(1);
+    UBigInt high = n;
+
+    while (low <= high) {
+        UBigInt mid = (low + high) / UBigInt(2);
+
+        if (UBigInt square = mid * mid; square == n) {
+            return integer(BigInt(std::move(mid)));
+        } else if (square < n) {
+            low = mid + UBigInt(1);
+        } else {
+            high = mid - UBigInt(1);
+        }
+    }
+
+    real real_n = 0.0;
+    real factor = 1.0;
+
+    for (const auto& data = n.get_data(); const unsigned long it : std::ranges::reverse_view(data)) {
+        real_n += static_cast<real>(it) * factor;
+        factor *= static_cast<real>(18446744073709551615.0) + 1.0; // 2^64
+    }
+
+    return std::sqrt(real_n);
+}
+
+integer integer::isqrt() const { // integer square root (floor)
+    if (is_negative()) {
+        throw std::domain_error("Cannot compute square root of negative number");
+    }
+
+    if (is_zero() || is_one()) {
+        return *this;
+    }
+
+    // 使用二分查找法计算整数平方根（向下取整）
+    const BigInt big_val = to_bigint();
+    const UBigInt n = big_val.abs();
+
+    UBigInt low(1);
+    UBigInt high = n;
+    UBigInt result(0);
+
+    while (low <= high) {
+        UBigInt mid = (low + high) / UBigInt(2);
+        UBigInt square = mid * mid;
+
+        if (square == n) {
+            return integer(BigInt(mid, false));
+        }
+        if (square < n) {
+            result = mid;
+            low = mid + UBigInt(1);
+        } else {
+            high = mid - UBigInt(1);
+        }
+    }
+
+    return integer(BigInt(result, false));
+}
+
 std::string rational::to_rational_string() const {
     if (is_integer()) {
         return num.to_decimal_string();
@@ -560,4 +654,63 @@ real rational::to_inexact() const {
 
 rational rational::exact_rational(const integer& num, const integer& den) {
     return {num, den};
+}
+
+rational rational::from_real(const real r) {
+    static constexpr int max_iterations = 100;
+    if (r == 0.0) {
+        return rational(0);
+    }
+
+    bool negative = false;
+    real abs_r = r;
+    if (r <  0.0) {
+        negative = true;
+        abs_r = -r;
+    }
+
+    auto a0 = integer(0);
+    auto a1 = integer(1);
+    auto b0 = integer(1);
+    auto b1 = integer(0);
+
+    real x = abs_r;
+
+    for (int i = 0; i < max_iterations; ++i) {
+        auto integer_part = integer(static_cast<int64_t>(x));
+        real fractional_part = x - integer_part.to_real();
+
+        integer a2 = integer_part * a1 + a0;
+        integer b2 = integer_part * b1 + b0;
+
+        a0 = a1;
+        a1 = a2;
+        b0 = b1;
+        b1 = b2;
+
+        if (fractional_part == 0.0) {
+            break;
+        }
+
+        x = 1.0 / fractional_part;
+
+        if (x > 1e18) {
+            break;
+        }
+    }
+
+    rational result(a1, b1);
+    if (negative) {
+        result = -result;
+    }
+
+    return result;
+}
+
+bool is_close_enough(const rational& rat, const real& r, const double tolerance = 1e-10) {
+    real diff = rat.to_inexact() - r;
+    if (diff < 0.0) {
+        diff = -diff;
+    }
+    return diff < tolerance;
 }

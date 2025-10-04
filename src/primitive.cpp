@@ -39,9 +39,57 @@ void add_number_operations(Context& builder)
     builder.add_primitive("*", primitives::mul);
     builder.add_primitive("-", primitives::sub);
     builder.add_primitive("/", primitives::div);
+    builder.add_primitive("quotient", primitives::quotient);
     builder.add_primitive("modulo", primitives::modulo);
     builder.add_primitive("remainder", primitives::remainder);
-    builder.add_primitive("expt", primitives::power);
+    builder.add_primitive("expt", primitives::exponential);
+}
+
+void add_number_utils(Context& builder)
+{
+    builder.add_primitive("zero?", primitives::is_zero);
+    builder.add_primitive("positive?", primitives::is_positive);
+    builder.add_primitive("negative?", primitives::is_negative);
+    builder.add_primitive("even?", primitives::is_even);
+    builder.add_primitive("odd?", primitives::is_odd);
+    builder.add_primitive("max", primitives::max);
+    builder.add_primitive("min", primitives::min);
+    builder.add_primitive("abs", primitives::abs);
+    builder.add_primitive("gcd", primitives::gcd);
+    builder.add_primitive("lcm", primitives::lcm);
+    builder.add_primitive("floor", primitives::floor);
+    builder.add_primitive("ceiling", primitives::ceiling);
+    builder.add_primitive("truncate", primitives::truncate);
+    builder.add_primitive("round", primitives::round);
+}
+
+void add_math_functions(Context& builder)
+{
+    builder.add_primitive("sqrt", primitives::square_root);
+    builder.add_primitive("isqrt", primitives::square_root_integer);
+    builder.add_primitive("log", primitives::logarithm);
+    builder.add_primitive("sin", primitives::sine);
+    builder.add_primitive("cos", primitives::cosine);
+    builder.add_primitive("tan", primitives::tangent);
+    builder.add_primitive("asin", primitives::arcsine);
+    builder.add_primitive("acos", primitives::arccosine);
+    builder.add_primitive("atan", primitives::arctangent);
+    builder.add_primitive("exp", primitives::exponentiation);
+}
+
+void add_type_utils(Context& builder)
+{
+    builder.add_primitive("pair?", primitives::is_pair);
+    builder.add_primitive("number?", primitives::is_number);
+    builder.add_primitive("boolean?", primitives::is_boolean);
+    builder.add_primitive("symbol?", primitives::is_symbol);
+    builder.add_primitive("string?", primitives::is_string);
+    builder.add_primitive("exact?", primitives::is_exact);
+    builder.add_primitive("inexact?", primitives::is_inexact);
+    builder.add_primitive("exact->inexact", primitives::exact_to_inexact);
+    builder.add_primitive("inexact->exact", primitives::inexact_to_exact);
+    builder.add_primitive("number->string", primitives::number_to_string);
+    builder.add_primitive("string->number", primitives::string_to_number);
 }
 
 void add_quote_operation(Context& builder)
@@ -121,6 +169,9 @@ shared_ptr<Context> make_root_context()
     add_ptr_comparator(*context);
     add_number_operations(*context);
     add_number_comparators(*context);
+    add_number_utils(*context);
+    add_math_functions(*context);
+    add_type_utils(*context);
     add_logic_operations(*context);
     add_quote_operation(*context);
     add_lambda(*context);

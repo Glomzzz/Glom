@@ -20,9 +20,9 @@ bool primitives_utils::generic_num_eq(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
     return a->as_number_int() == b->as_number_int();
 }
 
-bool generic_lt(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
+bool primitives_utils::generic_num_lt(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
 {
-    primitives_utils::coerce_number(a,b);
+    coerce_number(a,b);
     if (a->is_number_real())
     {
         return a->as_number_real() < b->as_number_real();
@@ -34,9 +34,9 @@ bool generic_lt(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
     return a->as_number_int() < b->as_number_int();
 }
 
-bool generic_gt(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
+bool primitives_utils::generic_num_gt(shared_ptr<Expr>& a, shared_ptr<Expr>& b)
 {
-    primitives_utils::coerce_number(a,b);
+    coerce_number(a,b);
     if (a->is_number_real())
     {
         return a->as_number_real() > b->as_number_real();
@@ -186,7 +186,7 @@ shared_ptr<Expr> primitives::le(const shared_ptr<Context>& context, shared_ptr<P
         {
             throw GlomError("Invalid argument <=: " + next_expr->to_string() + " is not a number");
         }
-        if (generic_gt(last, next_expr))
+        if (primitives_utils::generic_num_gt(last, next_expr))
         {
             return Expr::FALSE;
         }
@@ -216,7 +216,7 @@ shared_ptr<Expr> primitives::ge(const shared_ptr<Context>& context, shared_ptr<P
         {
             throw GlomError("Invalid argument >=: " + next_expr->to_string() + " is not a number");
         }
-        if (generic_lt(last, next_expr))
+        if (primitives_utils::generic_num_lt(last, next_expr))
         {
             return Expr::FALSE;
         }

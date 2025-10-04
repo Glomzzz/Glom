@@ -65,8 +65,8 @@ class Tokenizer
     string input;
     size_t index;
 
-    Token next_number();
     Token next_string();
+    Token next_number();
     Token next_symbol_or_boolean();
 
 public:

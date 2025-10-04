@@ -255,6 +255,27 @@ shared_ptr<Expr> primitives::div(const shared_ptr<Context>& context, shared_ptr<
     return dividend;
 }
 
+shared_ptr<Expr> primitives::quotient(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
+{
+    shared_ptr<Expr> a,b = nullptr;
+    primitives_utils::expect_2_args("quotient", args, a, b);
+    a = eval(context, std::move(a));
+    b = eval(context, std::move(b));
+
+    if (!a->is_number_int() || !b->is_number_int())
+    {
+        throw GlomError("quotient only support integer numbers");
+    }
+    const integer dividend = a->as_number_int();
+    const integer divisor = b->as_number_int();
+    if (divisor.is_zero())
+    {
+        throw GlomError("quotient undefined for 0");
+    }
+    integer result = dividend / divisor;
+    return Expr::make_number_int(std::move(result));
+}
+
 shared_ptr<Expr> primitives::remainder(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
 {
     shared_ptr<Expr> a,b = nullptr;
@@ -298,7 +319,7 @@ shared_ptr<Expr> primitives::modulo(const shared_ptr<Context>& context, shared_p
 }
 
 
-shared_ptr<Expr> primitives::power(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
+shared_ptr<Expr> primitives::exponential(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
 {
     shared_ptr<Expr> base_expr, exp_expr = nullptr;
     primitives_utils::expect_2_args("expt", args, base_expr, exp_expr);

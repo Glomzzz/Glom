@@ -164,7 +164,7 @@ Token Tokenizer::next_number()
             index++;
         }
     }
-    if (input[index] == 'e')
+    if (input[index] == 'e' || input[index] == 'E')
     {
         decimal = true;
         index++;

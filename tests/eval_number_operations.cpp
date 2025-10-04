@@ -100,6 +100,17 @@ TEST_F(SchemeNumOperationsTest, IntegerExponentiation)
     EXPECT_EQ(integer(0), eval("(expt 0 5)")->as_number_int());
 }
 
+TEST_F(SchemeNumOperationsTest, IntegerQuotient)
+{
+    // Integer Quotient
+    EXPECT_EQ(integer(2), eval("(quotient 10 5)")->as_number_int());
+    EXPECT_EQ(integer(0), eval("(quotient 5 10)")->as_number_int());
+    EXPECT_EQ(integer(-2), eval("(quotient -10 5)")->as_number_int());
+    EXPECT_EQ(integer(-2), eval("(quotient 10 -5)")->as_number_int());
+    EXPECT_EQ(integer(2), eval("(quotient -10 -5)")->as_number_int());
+    EXPECT_EQ(integer(4), eval("(quotient 20 5)")->as_number_int());
+}
+
 TEST_F(SchemeNumOperationsTest, IntegerRemainder)
 {
     // Integer remainder operation
