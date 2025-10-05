@@ -17,38 +17,52 @@ protected:
 
 TEST_F(ParserTest, AtomParsing)
 {
-    const vector<shared_ptr<Expr>> exprs = parse("123 12312312312321312312312312412412412412412412412412 123/124 1748297128947981274891274.0 \"hello\" true abc");
+    auto exprs = parse("123 12312312312321312312312312412412412412412412412412 123/124 1748297128947981274891274.0 \"hello\" true abc");
+    auto current = exprs->car();
+    exprs = exprs->cdr()->as_pair();
 
-    EXPECT_EQ(7, exprs.size());
+    EXPECT_EQ(NUMBER_INT, current->get_type());
+    EXPECT_EQ(integer(123), current->as_number_int());
 
-    EXPECT_EQ(NUMBER_INT, exprs[0]->get_type());
-    EXPECT_EQ(integer(123), exprs[0]->as_number_int());
+    current = exprs->car();
+    exprs = exprs->cdr()->as_pair();
+    EXPECT_EQ(NUMBER_INT,current->get_type());
+    EXPECT_EQ(integer("12312312312321312312312312412412412412412412412412"), current->as_number_int());
 
-    EXPECT_EQ(NUMBER_INT, exprs[1]->get_type());
-    EXPECT_EQ(integer("12312312312321312312312312412412412412412412412412"), exprs[1]->as_number_int());
 
+    current = exprs->car();
+    exprs = exprs->cdr()->as_pair();
+    EXPECT_EQ(NUMBER_RAT, current->get_type());
+    EXPECT_EQ(rational(integer(123),integer(124)), current->as_number_rat());
 
-    EXPECT_EQ(NUMBER_RAT, exprs[2]->get_type());
-    EXPECT_EQ(rational(integer(123),integer(124)), exprs[2]->as_number_rat());
+    current = exprs->car();
+    exprs = exprs->cdr()->as_pair();
+    EXPECT_EQ(NUMBER_REAL, current->get_type());
+    EXPECT_EQ(from_string("1748297128947981274891274.0"), current->as_number_real());
 
-    EXPECT_EQ(NUMBER_REAL, exprs[3]->get_type());
-    EXPECT_EQ(from_string("1748297128947981274891274.0"), exprs[3]->as_number_real());
+    current = exprs->car();
+    exprs = exprs->cdr()->as_pair();
+    EXPECT_EQ(STRING, current->get_type());
+    EXPECT_EQ("hello", current->as_string());
 
-    EXPECT_EQ(STRING, exprs[4]->get_type());
-    EXPECT_EQ("hello", exprs[4]->as_string());
+    current = exprs->car();
+    exprs = exprs->cdr()->as_pair();
+    EXPECT_EQ(BOOLEAN, current->get_type());
+    EXPECT_EQ(true, current->as_boolean());
 
-    EXPECT_EQ(BOOLEAN, exprs[5]->get_type());
-    EXPECT_EQ(true, exprs[5]->as_boolean());
+    current = exprs->car();
+    exprs = exprs->cdr()->as_pair();
+    EXPECT_EQ(SYMBOL, current->get_type());
+    EXPECT_EQ("abc", current->as_symbol());
 
-    EXPECT_EQ(SYMBOL, exprs[6]->get_type());
-    EXPECT_EQ("abc", exprs[6]->as_symbol());
-
+    if (!exprs->empty())
+        FAIL() << "Expected only 7 expressions, got more.";
 }
 
 TEST_F(ParserTest, ListParsing)
 {
-    vector<shared_ptr<Expr>> exprs = parse("(1 2 3)");
-    const shared_ptr<Expr> list = std::move(exprs[0]);
+    const auto exprs = parse("(1 2 3)");
+    const shared_ptr<Expr> list = std::move(exprs->car());
     EXPECT_EQ(PAIR, list->get_type());
     int index = 0;
     for (const auto elem : *list->as_pair())
@@ -60,8 +74,8 @@ TEST_F(ParserTest, ListParsing)
 
 TEST_F(ParserTest, QuoteParsing)
 {
-    vector<shared_ptr<Expr>> exprs = parse("'(1 2 3)");
-    const shared_ptr<Expr> list = std::move(exprs[0]);
+    const auto exprs = parse("'(1 2 3)");
+    const shared_ptr<Expr> list = std::move(exprs->car());
     EXPECT_EQ(PAIR, list->get_type());
     const auto& quote = list->as_pair();
     EXPECT_EQ("quote", quote->car()->as_symbol());
@@ -74,10 +88,23 @@ TEST_F(ParserTest, QuoteParsing)
     }
 }
 
+TEST_F(ParserTest, QuotePairParsing)
+{
+    const auto exprs = parse("'((1 . 2) . (3 . 4))");
+    const shared_ptr<Expr> list = std::move(exprs->car());
+    EXPECT_EQ(PAIR, list->get_type());
+    const auto& quote = list->as_pair();
+    EXPECT_EQ("quote", quote->car()->as_symbol());
+    const auto& pair = quote->cdr()->as_pair()->car()->as_pair();
+    EXPECT_EQ("((1 . 2) 3 . 4)", pair->to_string());
+}
+
+
+
 TEST_F(ParserTest, NilParsing)
 {
-    vector<shared_ptr<Expr>> exprs = parse("'()");
-    const shared_ptr<Expr> quoted_nil = std::move(exprs[0]);
+    const auto exprs = parse("'()");
+    const shared_ptr<Expr> quoted_nil = std::move(exprs->car());
     EXPECT_EQ(PAIR, quoted_nil->get_type());
     const auto& quote = quoted_nil->as_pair();
     EXPECT_EQ("quote", quote->car()->as_symbol());
@@ -89,8 +116,8 @@ TEST_F(ParserTest, NilParsing)
 
 TEST_F(ParserTest, NestedList)
 {
-    vector<shared_ptr<Expr>> exprs = parse("((1 2) (3 4))");
-    const shared_ptr<Expr> list = std::move(exprs[0]);
+    const auto exprs = parse("((1 2) (3 4))");
+    const shared_ptr<Expr> list = std::move(exprs->car());
     EXPECT_EQ(PAIR, list->get_type());
     const auto& elements = list->as_pair();
     EXPECT_EQ(PAIR, elements->car()->get_type());

@@ -24,8 +24,8 @@ shared_ptr<Expr> primitives::eq_ptr(const shared_ptr<Context>& context, shared_p
 {
     shared_ptr<Expr> a, b = nullptr;
     primitives_utils::expect_2_args("eq?", args, a, b);
-    a = context->eval(a);
-    b = context->eval(b);
+    a = eval(context, a);
+    b = eval(context, b);
     return Expr::make_boolean(eq_ptr_impl(a,b));
 }
 
@@ -53,8 +53,8 @@ shared_ptr<Expr> primitives::eq_val(const shared_ptr<Context>& context, shared_p
 {
     shared_ptr<Expr> a, b = nullptr;
     primitives_utils::expect_2_args("eqv?", args, a, b);
-    a = context->eval(a);
-    b = context->eval(b);
+    a = eval(context, a);
+    b = eval(context, b);
     if (eq_ptr_impl(a,b)) return Expr::TRUE;
     return Expr::make_boolean(equal_value_internal(a, b));
 }
@@ -89,8 +89,8 @@ shared_ptr<Expr> primitives::eq_struct(const shared_ptr<Context>& context, share
 {
     shared_ptr<Expr> a, b = nullptr;
     primitives_utils::expect_2_args("equal?", args, a, b);
-    a = context->eval(a);
-    b = context->eval(b);
+    a = eval(context, a);
+    b = eval(context, b);
     if (eq_ptr_impl(a,b)) return Expr::TRUE;
     unordered_map<const Expr*, const Expr*> visited;
     visited.reserve(32);

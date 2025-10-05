@@ -13,7 +13,6 @@ typedef __int128 int128_t;
 typedef unsigned __int128 uint128_t;
 
 #include <vector>
-#include <iostream>
 
 using std::variant;
 using std::pair;
@@ -28,12 +27,14 @@ constexpr auto SYMBOL = 6;
 constexpr auto LAMBDA = 7;
 constexpr auto PRIMITIVE = 8;
 constexpr auto PAIR = 9;
+constexpr auto CONTINUATION = 10;
 
 
 class rational;
 using real = long double;
 
 real from_string(const std::string& str);
+std::string to_string(real val, size_t base = 10);
 
 class UBigInt
 {
@@ -96,10 +97,9 @@ public:
 
     bool operator<(uint64_t other) const;
 
-
-private:
     [[nodiscard]] std::pair<UBigInt, UBigInt> divide_single_word(uint64_t divisor) const;
 
+private:
     [[nodiscard]] std::pair<UBigInt, UBigInt> divide_long_division(const UBigInt& divisor) const;
 };
 
@@ -258,6 +258,8 @@ public:
 
     [[nodiscard]] BigInt to_bigint() const;
 
+    [[nodiscard]] std::variant<integer, real> sqrt() const;
+    [[nodiscard]] integer isqrt() const;
 };
 
 class rational {
@@ -319,8 +321,8 @@ public:
     [[nodiscard]] real to_inexact() const;
 
     static rational exact_rational(const integer& num, const integer& den);
+    static rational from_real(real r);
 };
-
 
 
 #endif //GLOM_TYPE_H

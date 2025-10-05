@@ -8,7 +8,17 @@
 
 
 Context::Context(shared_ptr<Context> parent, variables&& vars)
-    : parent(std::move(parent)), bindings(std::move(vars)) {}
+    : parent(std::move(parent)), bindings(std::move(vars))
+{
+    if (this->parent)
+    {
+        depth = this->parent->depth + 1;
+    }
+    else
+    {
+        depth = 0;
+    }
+}
 
 void Context::add(const string_view name, shared_ptr<Expr> value) {
     bindings[name] = std::move(value);

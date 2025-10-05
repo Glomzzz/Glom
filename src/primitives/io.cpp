@@ -19,8 +19,8 @@ shared_ptr<Expr> primitives::display(const shared_ptr<Context>& context, shared_
     for (auto expr : *args)
     {
         if (!expr) break;
-        const auto arg = context->eval(std::move(expr));
-        std::cout << arg->to_string();
+        const auto arg = eval(context, std::move(expr));
+        printf("%s", arg->to_string().c_str());
     }
     return Expr::NOTHING;
 }
@@ -44,6 +44,6 @@ shared_ptr<Expr> primitives::newline(const shared_ptr<Context>& context, shared_
     {
         throw GlomError("incorrect argument count in call newline: expected 0 arguments");
     }
-    std::cout << std::endl;
+    printf("\n");
     return Expr::NOTHING;
 }

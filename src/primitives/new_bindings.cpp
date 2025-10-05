@@ -27,7 +27,7 @@ shared_ptr<Expr> primitives::define(const shared_ptr<Context>& context, shared_p
             name = name_params_expr->as_symbol();
             auto value_expr = std::move(current->car());
             current = current->cdr()->as_pair();
-            value = context->eval(std::move(value_expr));;
+            value = eval(context, std::move(value_expr));;
             if (!current->empty())
             {
                 throw GlomError("Invalid body define");
@@ -130,7 +130,7 @@ shared_ptr<Expr> primitives::let(const shared_ptr<Context>& context, shared_ptr<
         }
         const auto binding_name = name_expr->as_symbol();
         auto lambda_param = Param(binding_name, false);
-        shared_ptr<Expr> lambda_arg = context->eval(std::move(rest->car()));
+        shared_ptr<Expr> lambda_arg = std::move(rest->car());
         lambda_params.emplace_back(lambda_param);
         const auto new_tail = Pair::single(std::move(lambda_arg));
         if (!lambda_args)
@@ -152,5 +152,68 @@ shared_ptr<Expr> primitives::let(const shared_ptr<Context>& context, shared_ptr<
         lambda_context->add(name->as_symbol(), lambda);
     }
     const auto apply = Pair::cons(std::move(lambda), Expr::make_pair(lambda_args));
-    return context->eval(Expr::make_pair(apply));
+    return eval(context, Expr::make_pair(apply));
+}
+
+shared_ptr<Expr> primitives::let_star(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
+{
+    if (args->empty() || args->cdr()->is_nil())
+    {
+        throw GlomError("Invalid number of arguments let*");
+    }
+    shared_ptr<Pair> current = std::move(args);
+    const shared_ptr<Expr> bindings_expr = current->car();
+    current = current->cdr()->as_pair();
+    if (!bindings_expr->is_pair())
+    {
+        throw GlomError("Invalid bindings in let*");
+    }
+    const auto bindings_list = bindings_expr->as_pair();
+    auto lambda_params = vector<Param>();
+    shared_ptr<Pair> lambda_args = nullptr;
+    shared_ptr<Context> lambda_context = Context::new_context(context);
+    for (shared_ptr<Pair> lambda_args_tail = nullptr; const auto& binding_expr : *bindings_list)
+    {
+        if (!binding_expr) break;
+        if (!binding_expr->is_pair())
+        {
+            throw GlomError("Invalid binding in let*");
+        }
+        const auto binding = binding_expr->as_pair();
+        if (binding->empty() || binding->cdr()->is_nil())
+        {
+            throw GlomError("Invalid binding in let");
+        }
+        const auto name_expr = binding->car();
+        const auto rest = binding->cdr()->as_pair();
+        if (!name_expr->is_symbol())
+        {
+            throw GlomError("Invalid binding name in let, must be symbol");
+        }
+        if (!rest->cdr()->is_nil())
+        {
+            throw GlomError("Invalid binding in let, must have exactly one value");
+        }
+        const auto binding_name = name_expr->as_symbol();
+        auto lambda_param = Param(binding_name, false);
+        shared_ptr<Expr> lambda_arg = eval(lambda_context, std::move(rest->car()));
+        lambda_params.emplace_back(lambda_param);
+        lambda_context->add(binding_name, lambda_arg);
+        const auto new_tail = Pair::single(std::move(lambda_arg));
+        if (!lambda_args)
+        {
+            lambda_args = new_tail;
+            lambda_args_tail = lambda_args;
+        }
+        else
+        {
+            lambda_args_tail->set_cdr(Expr::make_pair(new_tail));
+            lambda_args_tail = new_tail;
+        }
+    }
+    auto body = current;
+    auto lambda = Expr::make_lambda(make_shared<Lambda>(std::move(lambda_params), std::move(body), lambda_context));
+
+    const auto apply = Pair::cons(std::move(lambda), Expr::make_pair(lambda_args));
+    return eval(context, Expr::make_pair(apply));
 }

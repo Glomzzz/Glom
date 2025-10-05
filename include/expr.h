@@ -85,7 +85,13 @@ public:
 
 string view_to_string(const string_view& view);
 
+struct Continuation
+{
+    shared_ptr<Context> context;
+    shared_ptr<Pair> exprs;
+    unique_ptr<string_view> callcc = nullptr;
 
+};
 
 using ExprValue = std::variant<
     std::monostate,
@@ -97,7 +103,8 @@ using ExprValue = std::variant<
     string_view,             // symbol (interned)
     shared_ptr<Lambda>,
     shared_ptr<Primitive>,
-    shared_ptr<Pair>
+    shared_ptr<Pair>,
+    unique_ptr<Continuation>
 >;
 
 /**
@@ -109,10 +116,12 @@ using ExprValue = std::variant<
  * - Pair: Represents a pair of expressions.
  * - Lambda: Represents a lambda function. (Only constructed in runtime)
  * - Primitive: Represents a primitive members. (Only constructed in c++)
+ * - Continuation: Represents a continuation. (Only constructed in runtime)
  * - None: Represents None.
  */
 class Expr {
     ExprValue value;
+    explicit Expr(std::unique_ptr<Continuation>&& v);
     explicit Expr(shared_ptr<Pair>&& v);
     explicit Expr(shared_ptr<Lambda>&& v);
     explicit Expr(shared_ptr<Primitive>&& v);
@@ -135,6 +144,7 @@ public:
     [[nodiscard]] shared_ptr<Pair> as_pair() const;
     [[nodiscard]] shared_ptr<Lambda> as_lambda() const;
     [[nodiscard]] shared_ptr<Primitive> as_primitive() const;
+    [[nodiscard]] Continuation& as_cont() const;
     [[nodiscard]] string to_string() const;
     [[nodiscard]] bool to_boolean() const;
     [[nodiscard]] bool is_nil() const;
@@ -151,7 +161,9 @@ public:
     [[nodiscard]] bool is_lambda() const;
     [[nodiscard]] bool is_symbol() const;
     [[nodiscard]] bool is_primitive() const;
-
+    [[nodiscard]] bool is_cont() const;
+    void print() const;
+    
     static const shared_ptr<Expr> TRUE;
     static const shared_ptr<Expr> FALSE;
     static const shared_ptr<Expr> NIL;
@@ -166,6 +178,7 @@ public:
     static shared_ptr<Expr> make_lambda(shared_ptr<Lambda> v);
     static shared_ptr<Expr> make_primitive(shared_ptr<Primitive> v);
     static shared_ptr<Expr> make_pair(shared_ptr<Pair> v);
+    static shared_ptr<Expr> make_cont(unique_ptr<Continuation> v);
 };
 
 
@@ -195,5 +208,8 @@ public:
 };
 
 
+shared_ptr<Expr> make_continuation(const shared_ptr<Context>& context, shared_ptr<Pair>&& exprs);
+
+shared_ptr<Expr> make_callcc(const shared_ptr<Context>& context, shared_ptr<Pair>&& exprs, string_view name);
 
 #endif //GLOM_EXPR_H

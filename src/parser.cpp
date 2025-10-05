@@ -9,6 +9,7 @@
 class Parser
 {
     Tokenizer tokenizer;
+    bool quoted = false;
 
 public:
     explicit Parser(string input) : tokenizer(std::move(input)){}
@@ -42,31 +43,58 @@ public:
             {
                 shared_ptr<Pair> pair = nullptr;
                 shared_ptr<Pair> current = nullptr;
+
                 while (true)
                 {
                     Token nextToken = tokenizer.next();
                     if (nextToken.get_type() == TOKEN_RPAREN)
                     {
+                        break; // list closed
+                    }
+
+                    if (nextToken.get_type() == TOKEN_SYMBOL && nextToken.as_string() == "." && quoted)
+                    {
+                        if (!current)
+                            throw std::runtime_error("Unexpected '.' without preceding element");
+
+                        // Parse the cdr expression after the dot
+                        auto cdrExpr = parse_with(tokenizer.next());
+
+                        // After dotted expr, expect a ')'
+                        if (Token endToken = tokenizer.next(); endToken.get_type() != TOKEN_RPAREN)
+                            throw std::runtime_error("Expected ')' after dotted pair");
+
+                        current->set_cdr(std::move(cdrExpr));
                         break;
                     }
-                    auto next_pair = Pair::single(parse_with(std::move(nextToken)));
+
+                    // Regular element
+                    auto next_expr = parse_with(std::move(nextToken));
+                    auto next_pair = Pair::single(std::move(next_expr));
+
                     if (!pair)
                     {
-                        pair = std::move(next_pair);
+                        pair = next_pair;
                         current = pair;
-                        continue;
                     }
-                    current->set_cdr(Expr::make_pair(next_pair));
-                    current = next_pair;
+                    else
+                    {
+                        current->set_cdr(Expr::make_pair(next_pair));
+                        current = next_pair;
+                    }
                 }
+
                 if (!pair)
                     return nullptr;
+
                 return Expr::make_pair(pair);
             }
         case TOKEN_QUOTE:
             {
                 const auto pair = Pair::single(Expr::make_symbol("quote"));
+                quoted = true;
                 auto data = parse_with(std::move(tokenizer.next()));
+                quoted = false;
                 if (!data)
                     data = Expr::NIL;
                 pair->set_cdr(Expr::make_pair(Pair::single(data)));
@@ -81,16 +109,27 @@ public:
         }
     }
 
-    vector<shared_ptr<Expr>> parse()
+    shared_ptr<Pair> parse()
     {
-        vector<shared_ptr<Expr>> result;
+        shared_ptr<Pair> result = nullptr;
+        shared_ptr<Pair> current = nullptr;
         Token token = tokenizer.next();
         while (token.get_type() != TOKEN_EOI)
         {
             auto next = parse_with(std::move(token));
             if (!next)
                 throw std::runtime_error("invalid syntax ()");
-            result.push_back(next);
+            if (!result)
+            {
+                result = Pair::single(std::move(next));
+                current = result;
+            }
+            else
+            {
+                const auto next_pair = Pair::single(std::move(next));
+                current->set_cdr(Expr::make_pair(next_pair));
+                current = next_pair;
+            }
             token = tokenizer.next();
         }
         return result;
@@ -99,14 +138,14 @@ public:
 
 shared_ptr<Expr> parse_expr(string input)
 {
-    auto exprs = parse(std::move(input));
-    if (exprs.size() != 1)
+    const auto exprs = parse(std::move(input));
+    if (exprs->empty())
     {
-        throw std::runtime_error("Expected a single expression, got " + std::to_string(exprs.size()));
+        throw std::runtime_error("Expected a single expression, got " + exprs->to_string());
     }
-    return exprs[0];
+    return exprs->car();
 }
-vector<shared_ptr<Expr>> parse(string input)
+shared_ptr<Pair> parse(string input)
 {
     Parser parser(std::move(input));
     return parser.parse();

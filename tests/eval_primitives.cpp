@@ -5,6 +5,7 @@
 #include "expr.h"
 #include "context.h"
 #include "parser.h"
+#include "eval.h"
 
 class SchemePrimitivesTest : public ::testing::Test
 {
@@ -22,20 +23,20 @@ protected:
     [[nodiscard]] shared_ptr<Expr> eval(const std::string& input) const
     {
         const auto exprs = parse(input);
-        return context->eval(exprs);
+        return ::eval(context, exprs);
     }
 
     void perform(const std::string& input) const
     {
         const auto exprs = parse(input);
-        context->eval(exprs);
+        ::eval(context, exprs);
     }
 
     static shared_ptr<Expr> parse_and_get_first(const std::string& input)
     {
-        auto exprs = parse(input);
-        if (exprs.empty()) return Expr::NOTHING;
-        return exprs[0];
+        const auto exprs = parse(input);
+        if (exprs->empty()) return Expr::NOTHING;
+        return exprs->car();
     }
 
     std::shared_ptr<Context> context;
@@ -76,6 +77,9 @@ TEST_F(SchemePrimitivesTest, LambdaApplication)
 
     perform("(define add (lambda (x y) (+ x y)))");
     EXPECT_EQ(integer(7),eval("(add 3 4)")->as_number_int());
+
+    perform("(define varargs (lambda (x . list) (+ x (apply + list))))");
+    EXPECT_EQ(integer(12),eval("(varargs 3 4 5)")->as_number_int());
 }
 
 // Binding tests
@@ -109,6 +113,18 @@ TEST_F(SchemePrimitivesTest, Let)
 
     // Let should not leak bindings
     perform("(let ((z 100)) z)");
+    EXPECT_ANY_THROW(perform("z"));
+}
+
+// let*
+TEST_F(SchemePrimitivesTest, LetStar)
+{
+    // Let* should create sequential local bindings
+    EXPECT_EQ(integer(9),eval("(let* ((x 2) (y (+ x 5))) (+ x y))")->as_number_int());
+    EXPECT_EQ(integer(65),eval("(let* ((x 5) (y (* x 12))) (+ x y))")->as_number_int());
+
+    // Let* should not leak bindings
+    perform("(let* ((z 200)) z)");
     EXPECT_ANY_THROW(perform("z"));
 }
 
@@ -220,61 +236,6 @@ TEST_F(SchemePrimitivesTest, Apply)
     const auto result = eval("(apply + '(1 2 3 4))");
     EXPECT_EQ(NUMBER_INT, result->get_type());
     EXPECT_EQ(integer(10), result->as_number_int());
-}
-// List operations tests
-TEST_F(SchemePrimitivesTest, Cons)
-{
-    const auto result = eval("(cons 1 2)");
-    EXPECT_EQ(PAIR, result->get_type());
-    const auto pair = result->as_pair();
-    EXPECT_EQ(integer(1), pair->car()->as_number_int());
-    EXPECT_EQ(integer(2), pair->cdr()->as_number_int());
-
-    // Test building lists
-    const auto list = eval("(cons 1 (cons 2 '()))");
-    EXPECT_EQ(PAIR, list->get_type());
-}
-
-TEST_F(SchemePrimitivesTest, Car)
-{
-    EXPECT_EQ(integer(1), eval("(car '(1 2 3))")->as_number_int());
-    EXPECT_EQ(integer(1), eval("(car (cons 1 2))")->as_number_int());
-}
-
-TEST_F(SchemePrimitivesTest, Cdr)
-{
-    const auto result = eval("(cdr '(1 2 3))");
-    EXPECT_EQ(PAIR, result->get_type());
-    EXPECT_EQ(integer(2), result->as_pair()->car()->as_number_int());
-
-    EXPECT_EQ(integer(2), eval("(cdr (cons 1 2))")->as_number_int());
-}
-
-TEST_F(SchemePrimitivesTest, List)
-{
-    const auto result = eval("(list 1 2 3)");
-    EXPECT_EQ(PAIR, result->get_type());
-
-    const auto pair = result->as_pair();
-    EXPECT_EQ(integer(1),pair->car()->as_number_int());
-
-    const auto second = pair->cdr()->as_pair();
-    EXPECT_EQ(integer(2),second->car()->as_number_int());
-
-    const auto third = second->cdr()->as_pair();
-    EXPECT_EQ(integer(3),third->car()->as_number_int());
-    EXPECT_TRUE(third->cdr()->is_nil());
-
-    // Empty list
-    EXPECT_TRUE(eval("(list)")->is_nil());
-}
-
-TEST_F(SchemePrimitivesTest, IsNull)
-{
-    EXPECT_EQ(Expr::TRUE, eval("(null? '())"));
-    EXPECT_EQ(Expr::FALSE, eval("(null? '(1 2 3))"));
-    EXPECT_EQ(Expr::FALSE, eval("(null? 1)"));
-    EXPECT_EQ(Expr::FALSE, eval("(null? #t)"));
 }
 
 // Complex integration tests

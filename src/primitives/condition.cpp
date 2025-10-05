@@ -11,13 +11,13 @@ shared_ptr<Expr> primitives::cond_if(const shared_ptr<Context>& context, shared_
 {
     shared_ptr<Expr> cond, then, otherwise = nullptr;
     primitives_utils::expect_2_or_3_args("if", args, cond, then, otherwise);
-    if (const auto evaluated_cond = context->eval(cond); evaluated_cond->to_boolean())
+    if (const auto evaluated_cond = eval(context, cond); evaluated_cond->to_boolean())
     {
-        return context->eval(then);
+        return make_continuation(context, Pair::single(std::move(then)));
     }
     if (otherwise != nullptr)
     {
-        return context->eval(otherwise);
+        return make_continuation(context, Pair::single(std::move(otherwise)));
     }
     return Expr::NOTHING;
 }
@@ -49,7 +49,7 @@ shared_ptr<Expr> primitives::cond(const shared_ptr<Context>& context, shared_ptr
         }
         else
         {
-            evaluated_condition = context->eval(condition);
+            evaluated_condition = eval(context, condition);
             test = evaluated_condition->to_boolean();
         }
         if (!test)
@@ -61,12 +61,16 @@ shared_ptr<Expr> primitives::cond(const shared_ptr<Context>& context, shared_ptr
             return evaluated_condition;
         }
         auto body_expr = clause_pair->cdr();
+        shared_ptr<Pair> body = nullptr;
         if (body_expr->is_pair())
         {
-            const auto body = body_expr->as_pair();
-            return context->eval(body);
+            body = body_expr->as_pair();
         }
-        return context->eval(std::move(body_expr));
+        else
+        {
+            body = Pair::single(std::move(body_expr));
+        }
+        return make_continuation(context, std::move(body));
     }
     return Expr::NOTHING;
 }

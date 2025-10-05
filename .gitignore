@@ -6,3 +6,4 @@ cmake_build
 cmake-build-release
 cmake-test
 result
+cmake-pg
