@@ -6,7 +6,6 @@
 
 #include "context.h"
 #include "expr.h"
-#include "error.h"
 
 using std::make_shared;
 
@@ -192,6 +191,7 @@ void add_list_operations(Context& builder)
 
 void add_eval_control(Context& builder)
 {
+    builder.add_primitive("begin", primitives::begin);
     builder.add_primitive("apply", primitives::apply);
     builder.add_primitive("call/cc", primitives::callcc);
     builder.add_primitive("error", primitives::error);

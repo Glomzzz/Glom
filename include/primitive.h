@@ -50,6 +50,7 @@ namespace primitives_utils
 namespace primitives
 {
     // Eval Control
+    shared_ptr<Expr> begin(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> apply(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> callcc(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> error(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);

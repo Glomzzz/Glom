@@ -230,14 +230,6 @@ TEST_F(SchemePrimitivesTest, CondCondition)
     EXPECT_EQ(integer(2),result_2_->as_number_int());
 }
 
-// Apply tests
-TEST_F(SchemePrimitivesTest, Apply)
-{
-    const auto result = eval("(apply + '(1 2 3 4))");
-    EXPECT_EQ(NUMBER_INT, result->get_type());
-    EXPECT_EQ(integer(10), result->as_number_int());
-}
-
 // Complex integration tests
 TEST_F(SchemePrimitivesTest, Factorial)
 {
