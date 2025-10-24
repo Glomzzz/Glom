@@ -174,5 +174,8 @@ namespace primitives
     shared_ptr<Expr> set(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> set_car(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> set_cdr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    // Delayed Evaluation
+    shared_ptr<Expr> delay(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> force(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
 }
 #endif //GLOM_PRIMITIVE_H

@@ -217,6 +217,12 @@ void add_mutable(Context& builder)
     builder.add_primitive("set-cdr!", primitives::set_cdr);
 }
 
+void add_delay(Context& builder)
+{
+    builder.add_primitive("delay", primitives::delay);
+    builder.add_primitive("force", primitives::force);
+}
+
 shared_ptr<Context> make_root_context()
 {
     const shared_ptr<Context> context = Context::new_context();
@@ -235,5 +241,6 @@ shared_ptr<Context> make_root_context()
     add_list_operations(*context);
     add_eval_control(*context);
     add_mutable(*context);
+    add_delay(*context);
     return context;
 }
