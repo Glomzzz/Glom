@@ -55,3 +55,14 @@ shared_ptr<Expr> primitives::error(const shared_ptr<Context>& context, shared_pt
     }
     throw GlomError("Error: " + message);
 }
+
+//begin
+shared_ptr<Expr> primitives::begin(const shared_ptr<Context>& context, shared_ptr<Pair>&& args)
+{
+    if (!args || args->empty()) {
+        return Expr::NOTHING;
+    }
+
+    shared_ptr<Expr> result = eval(context, args);
+    return result;
+}

@@ -170,5 +170,9 @@ namespace primitives
     shared_ptr<Expr> list(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> append(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> length(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    // Mutable Context
+    shared_ptr<Expr> set(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> set_car(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> set_cdr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
 }
 #endif //GLOM_PRIMITIVE_H

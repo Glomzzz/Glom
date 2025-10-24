@@ -39,6 +39,7 @@ public:
     void set_parent(shared_ptr<Context> new_parent);
     void add(std::string_view name, shared_ptr<Expr> value);
     void add_primitive(const string& name, PrimitiveProc proc);
+    bool assign(const std::string_view& name, shared_ptr<Expr> value);
 
     string to_string() const;
 

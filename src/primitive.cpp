@@ -6,6 +6,7 @@
 
 #include "context.h"
 #include "expr.h"
+#include "error.h"
 
 using std::make_shared;
 
@@ -30,6 +31,18 @@ void Context::add_primitive(const string& name, PrimitiveProc proc)
 {
     const auto name_view = SymbolPool::instance().intern(name);
     add(name_view, make_primitive(name, std::move(proc)));
+}
+
+bool Context::assign(const std::string_view& name, shared_ptr<Expr> value) {
+    auto ctx = this;
+    while (ctx) {
+        if (auto it = ctx->bindings.find(name); it != ctx->bindings.end()) {
+            it->second = std::move(value);
+            return true;
+        }
+        ctx = ctx->parent ? ctx->parent.get() : nullptr;
+    }
+    return false;
 }
 
 void add_number_operations(Context& builder)
@@ -197,7 +210,12 @@ void add_eval_control(Context& builder)
     builder.add_primitive("error", primitives::error);
 }
 
-
+void add_mutable(Context& builder)
+{
+    builder.add_primitive("set!", primitives::set);
+    builder.add_primitive("set-car!", primitives::set_car);
+    builder.add_primitive("set-cdr!", primitives::set_cdr);
+}
 
 shared_ptr<Context> make_root_context()
 {
@@ -216,5 +234,6 @@ shared_ptr<Context> make_root_context()
     add_io_operations(*context);
     add_list_operations(*context);
     add_eval_control(*context);
+    add_mutable(*context);
     return context;
 }
