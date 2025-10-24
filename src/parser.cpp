@@ -85,7 +85,7 @@ public:
                 }
 
                 if (!pair)
-                    return nullptr;
+                    return Expr::NIL;
 
                 return Expr::make_pair(pair);
             }
@@ -117,7 +117,7 @@ public:
         while (token.get_type() != TOKEN_EOI)
         {
             auto next = parse_with(std::move(token));
-            if (!next)
+            if (!result && next == Expr::NIL)
                 throw std::runtime_error("invalid syntax ()");
             if (!result)
             {
