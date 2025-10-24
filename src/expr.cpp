@@ -359,6 +359,12 @@ shared_ptr<Expr> Expr::make_symbol(string v)
     const auto str_view = SymbolPool::instance().intern(std::move(v));
     return std::make_shared<Expr>(Expr(str_view));
 }
+shared_ptr<Expr> Expr::make_symbol(const string_view v)
+{
+    const auto str_view = SymbolPool::instance().intern(std::string(v));
+    return std::make_shared<Expr>(Expr(str_view));
+}
+
 shared_ptr<Expr> Expr::make_lambda(shared_ptr<Lambda> v)
 {
     return std::make_shared<Expr>(Expr(std::move(v)));

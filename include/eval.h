@@ -19,7 +19,7 @@ class Expr;
 class Param;
 class Pair;
 class Context;
-class Continuation;
+struct Continuation;
 
 class GlomCont : public std::exception {
 public:

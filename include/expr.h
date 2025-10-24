@@ -175,6 +175,7 @@ public:
     static shared_ptr<Expr> make_boolean(bool cond);
     static shared_ptr<Expr> make_string(unique_ptr<string> v);
     static shared_ptr<Expr> make_symbol(string v);
+    static shared_ptr<Expr> make_symbol(string_view v);
     static shared_ptr<Expr> make_lambda(shared_ptr<Lambda> v);
     static shared_ptr<Expr> make_primitive(shared_ptr<Primitive> v);
     static shared_ptr<Expr> make_pair(shared_ptr<Pair> v);

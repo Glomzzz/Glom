@@ -177,5 +177,8 @@ namespace primitives
     // Delayed Evaluation
     shared_ptr<Expr> delay(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> force(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    // Module
+    shared_ptr<Expr> provide(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> require(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
 }
 #endif //GLOM_PRIMITIVE_H

@@ -6,7 +6,6 @@
 
 #include "context.h"
 #include "expr.h"
-#include "error.h"
 
 using std::make_shared;
 
@@ -212,6 +211,13 @@ void add_delay(Context& builder)
     builder.add_primitive("force", primitives::force);
 }
 
+void add_module(Context& builder)
+{
+    builder.add_primitive("provide", primitives::provide);
+    builder.add_primitive("require", primitives::require);
+    builder.add_primitive("local-require", primitives::require);
+}
+
 shared_ptr<Context> make_root_context()
 {
     const shared_ptr<Context> context = Context::new_context();
@@ -231,5 +237,6 @@ shared_ptr<Context> make_root_context()
     add_eval_control(*context);
     add_mutable(*context);
     add_delay(*context);
+    add_module(*context);
     return context;
 }

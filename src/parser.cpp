@@ -91,7 +91,7 @@ public:
             }
         case TOKEN_QUOTE:
             {
-                const auto pair = Pair::single(Expr::make_symbol("quote"));
+                const auto pair = Pair::single(Expr::make_symbol(string("quote")));
                 quoted = true;
                 auto data = parse_with(std::move(tokenizer.next()));
                 quoted = false;

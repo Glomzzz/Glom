@@ -71,7 +71,7 @@ shared_ptr<Expr> primitives::delay(const shared_ptr<Context>& context, shared_pt
 
     // Build tagged promise structure:
     // (##promise #f thunk)
-    const auto tag = Expr::make_symbol("##promise");
+    const auto tag = Expr::make_symbol(string("##promise"));
     const auto forcedFlag = Expr::make_boolean(false);
 
     const auto cellPair = Pair::single(thunk);                          // (thunk)
