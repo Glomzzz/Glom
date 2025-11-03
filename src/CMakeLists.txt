@@ -10,6 +10,7 @@ add_library(glom
         error.cpp
         bigint.cpp
         number.cpp
+        module.cpp
         ${PRIMITIVE_SOURCES}
 )
 add_executable(glom_exe main.cpp)

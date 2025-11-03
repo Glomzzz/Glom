@@ -25,11 +25,11 @@ typedef unordered_map<std::string_view, shared_ptr<Expr>> variables;
  */
 class Context : public std::enable_shared_from_this<Context>
 {
-    Context(shared_ptr<Context> parent, variables&& vars);
 
 protected:
     shared_ptr<Context> parent = nullptr;
     variables bindings;
+    Context(shared_ptr<Context> parent, variables&& vars);
 public:
     size_t depth;
     shared_ptr<Expr> get(const std::string_view& name) const;
@@ -39,6 +39,13 @@ public:
     void set_parent(shared_ptr<Context> new_parent);
     void add(std::string_view name, shared_ptr<Expr> value);
     void add_primitive(const string& name, PrimitiveProc proc);
+    bool assign(const std::string_view& name, shared_ptr<Expr> value);
+
+    void init_module();
+    void provide(const vector<std::string_view>& export_keys);
+    void provide_all();
+    shared_ptr<const Context> get_module_exports() const;
+    void import_all(const shared_ptr<const Context>& other);
 
     string to_string() const;
 

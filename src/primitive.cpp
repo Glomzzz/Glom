@@ -6,7 +6,6 @@
 
 #include "context.h"
 #include "expr.h"
-#include "error.h"
 
 using std::make_shared;
 
@@ -32,6 +31,7 @@ void Context::add_primitive(const string& name, PrimitiveProc proc)
     const auto name_view = SymbolPool::instance().intern(name);
     add(name_view, make_primitive(name, std::move(proc)));
 }
+
 
 void add_number_operations(Context& builder)
 {
@@ -192,12 +192,31 @@ void add_list_operations(Context& builder)
 
 void add_eval_control(Context& builder)
 {
+    builder.add_primitive("begin", primitives::begin);
     builder.add_primitive("apply", primitives::apply);
     builder.add_primitive("call/cc", primitives::callcc);
     builder.add_primitive("error", primitives::error);
 }
 
+void add_mutable(Context& builder)
+{
+    builder.add_primitive("set!", primitives::set);
+    builder.add_primitive("set-car!", primitives::set_car);
+    builder.add_primitive("set-cdr!", primitives::set_cdr);
+}
 
+void add_delay(Context& builder)
+{
+    builder.add_primitive("delay", primitives::delay);
+    builder.add_primitive("force", primitives::force);
+}
+
+void add_module(Context& builder)
+{
+    builder.add_primitive("provide", primitives::provide);
+    builder.add_primitive("require", primitives::require);
+    builder.add_primitive("local-require", primitives::require);
+}
 
 shared_ptr<Context> make_root_context()
 {
@@ -216,5 +235,8 @@ shared_ptr<Context> make_root_context()
     add_io_operations(*context);
     add_list_operations(*context);
     add_eval_control(*context);
+    add_mutable(*context);
+    add_delay(*context);
+    add_module(*context);
     return context;
 }

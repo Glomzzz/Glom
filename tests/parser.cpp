@@ -113,6 +113,16 @@ TEST_F(ParserTest, NilParsing)
     EXPECT_EQ(Expr::NIL, nil_nil->cdr());
 }
 
+TEST_F(ParserTest, NilParsing2)
+{
+    const auto exprs = parse("(let () '())");
+    const shared_ptr<Expr> let = std::move(exprs->car());
+    EXPECT_EQ(PAIR, let->get_type());
+    const auto& pair = let->as_pair();
+    EXPECT_EQ("let", pair->car()->as_symbol());
+    const auto& nil_nil = pair->cdr()->as_pair();
+    EXPECT_EQ(Expr::NIL, nil_nil->car());
+}
 
 TEST_F(ParserTest, NestedList)
 {

@@ -50,6 +50,7 @@ namespace primitives_utils
 namespace primitives
 {
     // Eval Control
+    shared_ptr<Expr> begin(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> apply(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> callcc(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> error(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
@@ -169,5 +170,15 @@ namespace primitives
     shared_ptr<Expr> list(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> append(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
     shared_ptr<Expr> length(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    // Mutable Context
+    shared_ptr<Expr> set(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> set_car(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> set_cdr(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    // Delayed Evaluation
+    shared_ptr<Expr> delay(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> force(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    // Module
+    shared_ptr<Expr> provide(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
+    shared_ptr<Expr> require(const shared_ptr<Context>& context, shared_ptr<Pair>&& args);
 }
 #endif //GLOM_PRIMITIVE_H

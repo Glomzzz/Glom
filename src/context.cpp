@@ -66,6 +66,18 @@ bool Context::has(const string_view& name) const
     return false;
 }
 
+bool Context::assign(const std::string_view& name, shared_ptr<Expr> value) {
+    auto ctx = this;
+    while (ctx) {
+        if (auto it = ctx->bindings.find(name); it != ctx->bindings.end()) {
+            it->second = std::move(value);
+            return true;
+        }
+        ctx = ctx->parent ? ctx->parent.get() : nullptr;
+    }
+    return false;
+}
+
 string Context::to_string() const
 {
     string result = "{";
